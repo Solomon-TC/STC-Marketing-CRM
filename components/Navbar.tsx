@@ -27,7 +27,7 @@ export default function Navbar() {
 
   return (
     <header className="border-b border-black/10 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-[1800px] items-center justify-between px-4 py-3 sm:px-6 lg:px-10">
         <div className="flex items-center gap-6">
           <span className="font-serif text-base">STC Marketing CRM</span>
           <nav className="hidden gap-1 sm:flex">
