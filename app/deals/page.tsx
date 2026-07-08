@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
-import { DEAL_STAGES } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES } from '@/lib/types';
 
 export default function DealsPage() {
   const supabase = createClient();
@@ -70,8 +70,8 @@ export default function DealsPage() {
                 {stageDeals.map((deal) => (
                   <div key={deal.id} className="card">
                     <p className="text-sm font-medium">{deal.title}</p>
-                    {deal.contacts?.name && (
-                      <p className="text-xs text-ink/50">{deal.contacts.name}</p>
+                    {deal.contacts && (
+                      <p className="text-xs text-ink/50">{contactDisplayName(deal.contacts)}</p>
                     )}
                     {deal.value != null && (
                       <p className="mt-1 text-xs text-ink/60">
@@ -154,7 +154,7 @@ function NewDealForm({
         <option value="">No linked contact</option>
         {contacts.map((c) => (
           <option key={c.id} value={c.id}>
-            {c.name}
+            {contactDisplayName(c)}
           </option>
         ))}
       </select>

@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { DEAL_STAGES, type DealStage } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES, type DealStage } from '@/lib/types';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -12,7 +12,7 @@ export default async function DashboardPage() {
     supabase.from('deals').select('stage, value'),
     supabase
       .from('tasks')
-      .select('id, title, due_date, contacts(id, name)')
+      .select('id, title, due_date, contacts(id, name, company)')
       .eq('done', false)
       .order('due_date', { ascending: true })
       .limit(6),
@@ -90,7 +90,7 @@ export default async function DashboardPage() {
               <div key={task.id} className="flex items-center justify-between text-sm">
                 <span>{task.title}</span>
                 <span className="text-ink/50">
-                  {task.contacts?.name ? `${task.contacts.name} · ` : ''}
+                  {task.contacts ? `${contactDisplayName(task.contacts)} · ` : ''}
                   {task.due_date ?? 'no due date'}
                 </span>
               </div>

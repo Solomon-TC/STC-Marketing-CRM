@@ -27,7 +27,7 @@ export const DEAL_STAGES: { value: DealStage; label: string }[] = [
 
 export interface Contact {
   id: string;
-  name: string;
+  name: string | null;
   company: string | null;
   email: string | null;
   phone: string | null;
@@ -36,6 +36,12 @@ export interface Contact {
   notes: string | null;
   created_at: string;
   updated_at: string;
+}
+
+// Contacts imported without a name (e.g. a spreadsheet with only company names)
+// fall back to their company as the display label.
+export function contactDisplayName(contact: { name: string | null; company: string | null }): string {
+  return contact.name || contact.company || 'Unnamed contact';
 }
 
 export interface Deal {
@@ -59,5 +65,5 @@ export interface Task {
   due_date: string | null;
   done: boolean;
   created_at: string;
-  contacts?: Pick<Contact, 'id' | 'name'> | null;
+  contacts?: Pick<Contact, 'id' | 'name' | 'company'> | null;
 }

@@ -17,9 +17,11 @@ create type deal_stage as enum (
 );
 
 -- 2. Contacts
+-- name is optional: bulk imports from a spreadsheet with only company names
+-- are supported, so every contact needs at least a name or a company.
 create table contacts (
   id uuid primary key default gen_random_uuid(),
-  name text not null,
+  name text,
   company text,
   email text,
   phone text,
@@ -27,7 +29,8 @@ create table contacts (
   location text,
   notes text,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
+  updated_at timestamptz not null default now(),
+  constraint contacts_name_or_company_present check (name is not null or company is not null)
 );
 
 create index contacts_industry_idx on contacts (industry);

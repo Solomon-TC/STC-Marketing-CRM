@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact } from '@/lib/types';
+import { contactDisplayName } from '@/lib/types';
 
 export default function ContactsPage() {
   const supabase = createClient();
@@ -108,19 +109,20 @@ export default function ContactsPage() {
               <th className="px-4 py-2 font-medium">Location</th>
               <th className="px-4 py-2 font-medium">Email</th>
               <th className="px-4 py-2 font-medium">Phone</th>
+              <th className="px-4 py-2 font-medium">Notes</th>
             </tr>
           </thead>
           <tbody>
             {loading && (
               <tr>
-                <td className="px-4 py-4 text-ink/50" colSpan={6}>
+                <td className="px-4 py-4 text-ink/50" colSpan={7}>
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td className="px-4 py-4 text-ink/50" colSpan={6}>
+                <td className="px-4 py-4 text-ink/50" colSpan={7}>
                   No contacts match those filters.
                 </td>
               </tr>
@@ -129,7 +131,7 @@ export default function ContactsPage() {
               <tr key={c.id} className="border-b border-black/5 last:border-0 hover:bg-black/[0.02]">
                 <td className="px-4 py-2">
                   <Link href={`/contacts/${c.id}`} className="text-accent hover:underline">
-                    {c.name}
+                    {contactDisplayName(c)}
                   </Link>
                 </td>
                 <td className="px-4 py-2 text-ink/70">{c.company ?? '—'}</td>
@@ -137,6 +139,9 @@ export default function ContactsPage() {
                 <td className="px-4 py-2 text-ink/70">{c.location ?? '—'}</td>
                 <td className="px-4 py-2 text-ink/70">{c.email ?? '—'}</td>
                 <td className="px-4 py-2 text-ink/70">{c.phone ?? '—'}</td>
+                <td className="max-w-xs truncate px-4 py-2 text-ink/70" title={c.notes ?? undefined}>
+                  {c.notes ?? '—'}
+                </td>
               </tr>
             ))}
           </tbody>

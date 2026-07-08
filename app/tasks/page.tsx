@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Task } from '@/lib/types';
+import { contactDisplayName } from '@/lib/types';
 
 export default function TasksPage() {
   const supabase = createClient();
@@ -12,7 +13,7 @@ export default function TasksPage() {
   async function load() {
     const { data } = await supabase
       .from('tasks')
-      .select('*, contacts(id, name)')
+      .select('*, contacts(id, name, company)')
       .order('due_date', { ascending: true });
     setTasks((data as any) ?? []);
   }
@@ -51,7 +52,8 @@ export default function TasksPage() {
               <span className={task.done ? 'text-ink/40 line-through' : ''}>{task.title}</span>
             </span>
             <span className="text-ink/50">
-              {task.contacts?.name ?? 'No contact'} {task.due_date ? `· ${task.due_date}` : ''}
+              {task.contacts ? contactDisplayName(task.contacts) : 'No contact'}{' '}
+              {task.due_date ? `· ${task.due_date}` : ''}
             </span>
           </label>
         ))}

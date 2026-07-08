@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, Task } from '@/lib/types';
-import { DEAL_STAGES } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES } from '@/lib/types';
 
 export default function ContactDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -56,7 +56,7 @@ export default function ContactDetailPage() {
 
   async function handleDelete() {
     if (!contact) return;
-    if (!confirm(`Delete ${contact.name}? This also removes their deals and tasks.`)) return;
+    if (!confirm(`Delete ${contactDisplayName(contact)}? This also removes their deals and tasks.`)) return;
     await supabase.from('contacts').delete().eq('id', contact.id);
     router.push('/contacts');
   }
@@ -90,7 +90,7 @@ export default function ContactDetailPage() {
           <Link href="/contacts" className="text-sm text-accent hover:underline">
             &larr; Back to contacts
           </Link>
-          <h1 className="mt-1 text-xl font-medium">{contact.name}</h1>
+          <h1 className="mt-1 text-xl font-medium">{contactDisplayName(contact)}</h1>
         </div>
         <button onClick={handleDelete} className="text-sm text-warn hover:underline">
           Delete contact
@@ -101,8 +101,8 @@ export default function ContactDetailPage() {
         <Field label="Name">
           <input
             className="input"
-            value={contact.name}
-            onChange={(e) => setContact({ ...contact, name: e.target.value })}
+            value={contact.name ?? ''}
+            onChange={(e) => setContact({ ...contact, name: e.target.value || null })}
           />
         </Field>
         <Field label="Company">

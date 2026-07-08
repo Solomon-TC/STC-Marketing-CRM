@@ -5,8 +5,8 @@ import Papa from 'papaparse';
 import { createClient } from '@/lib/supabase/client';
 
 const TARGET_FIELDS = [
-  { key: 'name', label: 'Name (required)' },
-  { key: 'company', label: 'Company' },
+  { key: 'name', label: 'Name' },
+  { key: 'company', label: 'Company (required)' },
   { key: 'email', label: 'Email' },
   { key: 'phone', label: 'Phone' },
   { key: 'industry', label: 'Industry' },
@@ -47,8 +47,8 @@ export default function ImportPage() {
   }
 
   async function handleImport() {
-    if (!mapping.name) {
-      setResult('Map a column to Name before importing, every contact needs one.');
+    if (!mapping.company) {
+      setResult('Map a column to Company before importing, every contact needs one.');
       return;
     }
     setImporting(true);
@@ -63,7 +63,7 @@ export default function ImportPage() {
         });
         return contact;
       })
-      .filter((c) => c.name);
+      .filter((c) => c.company);
 
     const { error } = await supabase.from('contacts').insert(payload);
 
