@@ -29,7 +29,7 @@ export default function Navbar() {
     <header className="border-b border-black/10 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <div className="flex items-center gap-6">
-          <span className="text-sm font-medium">STC Marketing CRM</span>
+          <span className="font-serif text-base">STC Marketing CRM</span>
           <nav className="hidden gap-1 sm:flex">
             {links.map((link) => {
               const active = pathname === link.href;

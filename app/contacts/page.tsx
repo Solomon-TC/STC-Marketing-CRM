@@ -49,7 +49,7 @@ export default function ContactsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-medium">Contacts</h1>
+          <h1 className="font-serif text-2xl">Contacts</h1>
           <p className="text-sm text-ink/60">{contacts.length} total</p>
         </div>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>

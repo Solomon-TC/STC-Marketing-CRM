@@ -7,11 +7,15 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        ink: '#1C1B18',
-        paper: '#FAF9F6',
-        accent: '#2F5D50',
-        accentSoft: '#E7EFEC',
+        ink: '#0B0B0C',
+        paper: '#F5F4F1',
+        accent: '#3F5B48',
+        accentSoft: '#DFE2DD',
         warn: '#B5502B',
+      },
+      fontFamily: {
+        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['var(--font-fraunces)', 'Georgia', 'serif'],
       },
     },
   },

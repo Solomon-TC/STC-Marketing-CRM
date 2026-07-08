@@ -35,7 +35,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-xl font-medium">Dashboard</h1>
+        <h1 className="font-serif text-2xl">Dashboard</h1>
         <p className="text-sm text-ink/60">A snapshot of contacts, pipeline, and open tasks.</p>
       </div>
 

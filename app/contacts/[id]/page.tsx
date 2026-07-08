@@ -90,7 +90,7 @@ export default function ContactDetailPage() {
           <Link href="/contacts" className="text-sm text-accent hover:underline">
             &larr; Back to contacts
           </Link>
-          <h1 className="mt-1 text-xl font-medium">{contactDisplayName(contact)}</h1>
+          <h1 className="mt-1 font-serif text-2xl">{contactDisplayName(contact)}</h1>
         </div>
         <button onClick={handleDelete} className="text-sm text-warn hover:underline">
           Delete contact

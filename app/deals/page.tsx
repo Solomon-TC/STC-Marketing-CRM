@@ -37,7 +37,7 @@ export default function DealsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-medium">Pipeline</h1>
+          <h1 className="font-serif text-2xl">Pipeline</h1>
           <p className="text-sm text-ink/60">
             {deals.length} {deals.length === 1 ? 'deal' : 'deals'} across your pipeline
           </p>
