@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
-import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS, WON_OR_BETTER_STAGES } from '@/lib/types';
 import ContactCombobox from '@/components/ContactCombobox';
 
 // Roughly matches the whiteboard process map: blue/orange/pink for the lead
@@ -121,7 +121,8 @@ function DealCard({
 }) {
   const [showManual, setShowManual] = useState(false);
   const nextStages = STAGE_TRANSITIONS[deal.stage];
-  const canAssignToCard = deal.stage === 'won' && deal.value != null && !!deal.contacts?.location;
+  const canAssignToCard =
+    WON_OR_BETTER_STAGES.includes(deal.stage) && deal.value != null && !!deal.contacts?.location;
 
   return (
     <div className="card">
