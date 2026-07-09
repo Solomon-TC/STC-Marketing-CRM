@@ -156,7 +156,12 @@ export default function ContactDetailPage() {
       </form>
 
       <div className="card">
-        <h2 className="mb-3 text-sm font-medium">Deals</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-medium">Deals</h2>
+          <Link href={`/deals?contactId=${contact.id}`} className="btn-secondary">
+            Add to pipeline
+          </Link>
+        </div>
         {deals.length === 0 && <p className="text-sm text-ink/50">No deals yet for this contact.</p>}
         <div className="space-y-2">
           {deals.map((d) => (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
 import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS } from '@/lib/types';
@@ -27,6 +27,7 @@ export default function DealsPage() {
   const [deals, setDeals] = useState<Deal[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [initialContactId, setInitialContactId] = useState<string | undefined>(undefined);
 
   async function load() {
     const [{ data: d }, { data: c }] = await Promise.all([
@@ -42,6 +43,15 @@ export default function DealsPage() {
 
   useEffect(() => {
     load();
+    // Arriving from a contact's "Add to pipeline" button: open the form
+    // pre-filled with that contact, then drop the param so a refresh doesn't
+    // reopen it.
+    const contactId = new URLSearchParams(window.location.search).get('contactId');
+    if (contactId) {
+      setInitialContactId(contactId);
+      setShowForm(true);
+      window.history.replaceState(null, '', '/deals');
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -67,8 +77,10 @@ export default function DealsPage() {
       {showForm && (
         <NewDealForm
           contacts={contacts}
+          initialContactId={initialContactId}
           onCreated={() => {
             setShowForm(false);
+            setInitialContactId(undefined);
             load();
           }}
         />
@@ -165,17 +177,102 @@ function DealCard({
   );
 }
 
+function ContactCombobox({
+  contacts,
+  value,
+  onChange,
+}: {
+  contacts: Contact[];
+  value: string;
+  onChange: (contactId: string) => void;
+}) {
+  const [query, setQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const selected = contacts.find((c) => c.id === value) ?? null;
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? contacts.filter(
+        (c) => contactDisplayName(c).toLowerCase().includes(q) || c.company?.toLowerCase().includes(q)
+      )
+    : contacts;
+
+  function select(contactId: string) {
+    onChange(contactId);
+    setQuery('');
+    setOpen(false);
+  }
+
+  return (
+    <div ref={containerRef} className="relative">
+      <input
+        className="input"
+        placeholder="Search contacts..."
+        value={open ? query : selected ? contactDisplayName(selected) : ''}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => {
+          setQuery('');
+          setOpen(true);
+        }}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setOpen(false);
+        }}
+      />
+      {open && (
+        <div className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-black/10 bg-white shadow-md">
+          <button
+            type="button"
+            className="block w-full px-3 py-2 text-left text-sm text-ink/50 hover:bg-black/5"
+            onClick={() => select('')}
+          >
+            No linked contact
+          </button>
+          {filtered.length === 0 && <p className="px-3 py-2 text-sm text-ink/40">No contacts match.</p>}
+          {filtered.map((c) => (
+            <button
+              key={c.id}
+              type="button"
+              className="block w-full px-3 py-2 text-left text-sm hover:bg-black/5"
+              onClick={() => select(c.id)}
+            >
+              {contactDisplayName(c)}
+              {c.name && c.company && <span className="text-ink/40"> · {c.company}</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function NewDealForm({
   contacts,
+  initialContactId,
   onCreated,
 }: {
   contacts: Contact[];
+  initialContactId?: string;
   onCreated: () => void;
 }) {
   const supabase = createClient();
   const [form, setForm] = useState({
     title: '',
-    contact_id: '',
+    contact_id: initialContactId ?? '',
     stage: 'cold_lead' as DealStage,
     value: '',
     expected_close_date: '',
@@ -211,18 +308,11 @@ function NewDealForm({
         value={form.title}
         onChange={(e) => setForm({ ...form, title: e.target.value })}
       />
-      <select
-        className="input"
+      <ContactCombobox
+        contacts={contacts}
         value={form.contact_id}
-        onChange={(e) => setForm({ ...form, contact_id: e.target.value })}
-      >
-        <option value="">No linked contact</option>
-        {contacts.map((c) => (
-          <option key={c.id} value={c.id}>
-            {contactDisplayName(c)}
-          </option>
-        ))}
-      </select>
+        onChange={(contactId) => setForm({ ...form, contact_id: contactId })}
+      />
       <select
         className="input"
         value={form.stage}
