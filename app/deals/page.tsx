@@ -3,7 +3,24 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
-import { contactDisplayName, DEAL_STAGES } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS } from '@/lib/types';
+
+// Roughly matches the whiteboard process map: blue/orange/pink for the lead
+// stages, purple for the follow-up stages, a green shade per money-in-motion
+// stage after "won", and red for lost.
+const STAGE_COLORS: Record<DealStage, { header: string; text: string; count: string }> = {
+  cold_lead: { header: 'bg-blue-50 border-blue-200', text: 'text-blue-700', count: 'text-blue-400' },
+  warm_lead: { header: 'bg-orange-50 border-orange-200', text: 'text-orange-700', count: 'text-orange-400' },
+  called_contacted: { header: 'bg-pink-50 border-pink-200', text: 'text-pink-700', count: 'text-pink-400' },
+  requested_followup: { header: 'bg-purple-50 border-purple-200', text: 'text-purple-700', count: 'text-purple-400' },
+  followed_up: { header: 'bg-violet-50 border-violet-200', text: 'text-violet-700', count: 'text-violet-400' },
+  won: { header: 'bg-green-50 border-green-200', text: 'text-green-700', count: 'text-green-400' },
+  invoice_sent: { header: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', count: 'text-emerald-400' },
+  payment_received: { header: 'bg-teal-50 border-teal-200', text: 'text-teal-700', count: 'text-teal-400' },
+  ad_made: { header: 'bg-lime-50 border-lime-200', text: 'text-lime-700', count: 'text-lime-500' },
+  ad_confirmed: { header: 'bg-green-100 border-green-300', text: 'text-green-800', count: 'text-green-500' },
+  lost: { header: 'bg-red-50 border-red-200', text: 'text-red-700', count: 'text-red-400' },
+};
 
 export default function DealsPage() {
   const supabase = createClient();
@@ -60,42 +77,90 @@ export default function DealsPage() {
       <div className="flex gap-4 overflow-x-auto pb-4">
         {DEAL_STAGES.map((stage) => {
           const stageDeals = deals.filter((d) => d.stage === stage.value);
+          const colors = STAGE_COLORS[stage.value];
           return (
             <div key={stage.value} className="w-64 shrink-0">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-medium">{stage.label}</h3>
-                <span className="text-xs text-ink/40">{stageDeals.length}</span>
+              <div
+                className={`mb-2 flex items-center justify-between rounded-md border px-2 py-1.5 ${colors.header}`}
+              >
+                <h3 className={`text-sm font-medium ${colors.text}`}>{stage.label}</h3>
+                <span className={`text-xs ${colors.count}`}>{stageDeals.length}</span>
               </div>
               <div className="space-y-2">
                 {stageDeals.map((deal) => (
-                  <div key={deal.id} className="card">
-                    <p className="text-sm font-medium">{deal.title}</p>
-                    {deal.contacts && (
-                      <p className="text-xs text-ink/50">{contactDisplayName(deal.contacts)}</p>
-                    )}
-                    {deal.value != null && (
-                      <p className="mt-1 text-xs text-ink/60">
-                        ${Number(deal.value).toLocaleString()}
-                      </p>
-                    )}
-                    <select
-                      className="input mt-2 text-xs"
-                      value={deal.stage}
-                      onChange={(e) => moveStage(deal, e.target.value as DealStage)}
-                    >
-                      {DEAL_STAGES.map((s) => (
-                        <option key={s.value} value={s.value}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <DealCard key={deal.id} deal={deal} onMove={moveStage} />
                 ))}
               </div>
             </div>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function DealCard({
+  deal,
+  onMove,
+}: {
+  deal: Deal;
+  onMove: (deal: Deal, stage: DealStage) => void;
+}) {
+  const [showManual, setShowManual] = useState(false);
+  const nextStages = STAGE_TRANSITIONS[deal.stage];
+
+  return (
+    <div className="card">
+      <p className="text-sm font-medium">{deal.title}</p>
+      {deal.contacts && <p className="text-xs text-ink/50">{contactDisplayName(deal.contacts)}</p>}
+      {deal.value != null && (
+        <p className="mt-1 text-xs text-ink/60">${Number(deal.value).toLocaleString()}</p>
+      )}
+
+      {nextStages.length > 0 && (
+        <select
+          className="input mt-2 text-xs"
+          value=""
+          onChange={(e) => {
+            if (e.target.value) onMove(deal, e.target.value as DealStage);
+          }}
+        >
+          <option value="">Move to...</option>
+          {nextStages.map((stageValue) => {
+            const s = DEAL_STAGES.find((d) => d.value === stageValue)!;
+            return (
+              <option key={s.value} value={s.value}>
+                {s.label}
+              </option>
+            );
+          })}
+        </select>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setShowManual((v) => !v)}
+        className="mt-2 block text-[11px] text-ink/40 hover:text-ink/60 hover:underline"
+      >
+        {showManual ? 'Cancel' : 'Correct stage manually'}
+      </button>
+
+      {showManual && (
+        <select
+          className="input mt-1 text-xs"
+          value={deal.stage}
+          onChange={(e) => {
+            onMove(deal, e.target.value as DealStage);
+            setShowManual(false);
+          }}
+        >
+          {DEAL_STAGES.map((s) => (
+            <option key={s.value} value={s.value}>
+              {s.label}
+            </option>
+          ))}
+        </select>
+      )}
     </div>
   );
 }

@@ -16,6 +16,18 @@ create type deal_stage as enum (
   'ad_confirmed'
 );
 
+-- Stage names were reworked to match the real sales process. Renaming enum
+-- values (rather than dropping/recreating the type or table) keeps every
+-- existing deal row intact -- a deal with stage = 'follow_up' automatically
+-- reads as 'followed_up' after this runs, no data rewrite needed.
+--
+-- Setting up fresh: running this whole file top-to-bottom handles both the
+-- create and the rename, so you end up with the correct final names.
+-- Already have this project running: run ONLY these two lines below in the
+-- SQL Editor -- the create type above would fail with "already exists".
+alter type deal_stage rename value 'follow_up' to 'followed_up';
+alter type deal_stage rename value 'invoice_received' to 'payment_received';
+
 -- 2. Contacts
 -- name is optional: bulk imports from a spreadsheet with only company names
 -- are supported, so every contact needs at least a name or a company.
