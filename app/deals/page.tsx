@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
-import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES, formatCardMonth, STAGE_TRANSITIONS } from '@/lib/types';
+import ContactCombobox from '@/components/ContactCombobox';
 
 // Roughly matches the whiteboard process map: blue/orange/pink for the lead
 // stages, purple for the follow-up stages, a green shade per money-in-motion
@@ -33,7 +34,7 @@ export default function DealsPage() {
     const [{ data: d }, { data: c }] = await Promise.all([
       supabase
         .from('deals')
-        .select('*, contacts(id, name, company)')
+        .select('*, contacts(id, name, company, location)')
         .order('created_at', { ascending: false }),
       supabase.from('contacts').select('*').order('name'),
     ]);
@@ -120,6 +121,7 @@ function DealCard({
 }) {
   const [showManual, setShowManual] = useState(false);
   const nextStages = STAGE_TRANSITIONS[deal.stage];
+  const canAssignToCard = deal.stage === 'won' && deal.value != null && !!deal.contacts?.location;
 
   return (
     <div className="card">
@@ -128,6 +130,8 @@ function DealCard({
       {deal.value != null && (
         <p className="mt-1 text-xs text-ink/60">${Number(deal.value).toLocaleString()}</p>
       )}
+
+      {canAssignToCard && <AssignToCardControl deal={deal} />}
 
       {nextStages.length > 0 && (
         <select
@@ -177,83 +181,96 @@ function DealCard({
   );
 }
 
-function ContactCombobox({
-  contacts,
-  value,
-  onChange,
-}: {
-  contacts: Contact[];
-  value: string;
-  onChange: (contactId: string) => void;
-}) {
-  const [query, setQuery] = useState('');
+type MatchingSlot = {
+  id: string;
+  slot_type: string;
+  price: number;
+  card: { id: string; city: string; month: string };
+};
+
+// Won deals with a contact location can be manually linked to an open slot
+// on an active card for that city -- never auto-assigned, per spec.
+function AssignToCardControl({ deal }: { deal: Deal }) {
+  const supabase = createClient();
   const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
+  const [slots, setSlots] = useState<MatchingSlot[] | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
 
-  const selected = contacts.find((c) => c.id === value) ?? null;
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
+  async function toggle() {
+    const opening = !open;
+    setOpen(opening);
+    if (opening && slots === null) {
+      setLoading(true);
+      const location = (deal.contacts?.location ?? '').trim().toLowerCase();
+      const { data: activeCards } = await supabase
+        .from('cards')
+        .select('id, city, month, status')
+        .in('status', ['filling', 'ready']);
+      const matchingCards = (activeCards ?? []).filter((c) => {
+        const city = c.city.trim().toLowerCase();
+        return city.length > 0 && (location.includes(city) || city.includes(location));
+      });
+      if (matchingCards.length === 0) {
+        setSlots([]);
+      } else {
+        const { data: openSlots } = await supabase
+          .from('card_slots')
+          .select('id, card_id, slot_type, price')
+          .eq('status', 'open')
+          .in(
+            'card_id',
+            matchingCards.map((c) => c.id)
+          );
+        const withCard: MatchingSlot[] = (openSlots ?? []).map((s: any) => ({
+          id: s.id,
+          slot_type: s.slot_type,
+          price: s.price,
+          card: matchingCards.find((c) => c.id === s.card_id)!,
+        }));
+        setSlots(withCard);
       }
+      setLoading(false);
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+  }
 
-  const q = query.trim().toLowerCase();
-  const filtered = q
-    ? contacts.filter(
-        (c) => contactDisplayName(c).toLowerCase().includes(q) || c.company?.toLowerCase().includes(q)
-      )
-    : contacts;
-
-  function select(contactId: string) {
-    onChange(contactId);
-    setQuery('');
-    setOpen(false);
+  async function assign(slotId: string) {
+    const businessName = contactDisplayName(deal.contacts!);
+    await supabase
+      .from('card_slots')
+      .update({ business_name: businessName, contact_id: deal.contacts!.id, status: 'filled' })
+      .eq('id', slotId);
+    setSlots((prev) => prev?.filter((s) => s.id !== slotId) ?? null);
+    setMessage(`Assigned to ${businessName}'s card slot.`);
   }
 
   return (
-    <div ref={containerRef} className="relative">
-      <input
-        className="input"
-        placeholder="Search contacts..."
-        value={open ? query : selected ? contactDisplayName(selected) : ''}
-        onChange={(e) => {
-          setQuery(e.target.value);
-          setOpen(true);
-        }}
-        onFocus={() => {
-          setQuery('');
-          setOpen(true);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'Escape') setOpen(false);
-        }}
-      />
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={toggle}
+        className="rounded-md bg-accentSoft px-2 py-1 text-[11px] font-medium text-accent hover:bg-accentSoft/70"
+      >
+        {open ? 'Hide card slots' : 'Assign to card slot'}
+      </button>
       {open && (
-        <div className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-black/10 bg-white shadow-md">
-          <button
-            type="button"
-            className="block w-full px-3 py-2 text-left text-sm text-ink/50 hover:bg-black/5"
-            onClick={() => select('')}
-          >
-            No linked contact
-          </button>
-          {filtered.length === 0 && <p className="px-3 py-2 text-sm text-ink/40">No contacts match.</p>}
-          {filtered.map((c) => (
-            <button
-              key={c.id}
-              type="button"
-              className="block w-full px-3 py-2 text-left text-sm hover:bg-black/5"
-              onClick={() => select(c.id)}
-            >
-              {contactDisplayName(c)}
-              {c.name && c.company && <span className="text-ink/40"> · {c.company}</span>}
-            </button>
-          ))}
+        <div className="mt-1 rounded-md border border-black/10 bg-white p-2 text-xs">
+          {loading && <p className="text-ink/40">Loading open slots...</p>}
+          {!loading && slots?.length === 0 && (
+            <p className="text-ink/40">No open slots on an active card in this city.</p>
+          )}
+          {!loading &&
+            slots?.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => assign(s.id)}
+                className="block w-full rounded px-1.5 py-1 text-left hover:bg-black/5"
+              >
+                {s.card.city} · {formatCardMonth(s.card.month)} · {s.slot_type} (${s.price})
+              </button>
+            ))}
+          {message && <p className="mt-1 text-accent">{message}</p>}
         </div>
       )}
     </div>

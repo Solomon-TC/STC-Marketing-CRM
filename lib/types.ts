@@ -71,7 +71,7 @@ export interface Deal {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  contacts?: Pick<Contact, 'id' | 'name' | 'company'> | null;
+  contacts?: Pick<Contact, 'id' | 'name' | 'company' | 'location'> | null;
 }
 
 export interface Task {
@@ -83,4 +83,61 @@ export interface Task {
   done: boolean;
   created_at: string;
   contacts?: Pick<Contact, 'id' | 'name' | 'company'> | null;
+}
+
+// --- Card management ---
+// A "card" is one physical 9x12 postcard mailer for a specific city/month,
+// made up of ad slots that local businesses buy.
+
+export type CardStatus = 'filling' | 'ready' | 'sent' | 'archived';
+export type SlotType = 'half' | 'regular' | 'double' | 'half_page';
+export type SlotStatus = 'open' | 'filled';
+
+export const BREAK_EVEN_COST = 2899;
+
+export const SLOT_TYPES: { value: SlotType; label: string; dimensions: string; price: number }[] = [
+  { value: 'half', label: 'Half', dimensions: '2.8" x 1.8"', price: 200 },
+  { value: 'regular', label: 'Regular', dimensions: '2.8" x 3.8"', price: 350 },
+  { value: 'double', label: 'Double', dimensions: '5.8" x 3.8"', price: 600 },
+  { value: 'half_page', label: 'Half Page', dimensions: '11.7" x 3.8"', price: 1000 },
+];
+
+export const CARD_STATUSES: { value: CardStatus; label: string }[] = [
+  { value: 'filling', label: 'Filling' },
+  { value: 'ready', label: 'Ready to Send' },
+  { value: 'sent', label: 'Sent' },
+  { value: 'archived', label: 'Archived' },
+];
+
+const MONTH_NAMES = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December',
+];
+
+// Parsed from the 'YYYY-MM-DD' string directly (rather than via `new Date`)
+// so the displayed month never shifts a day from timezone conversion.
+export function formatCardMonth(month: string): string {
+  const [year, mon] = month.split('-');
+  return `${MONTH_NAMES[Number(mon) - 1]} ${year}`;
+}
+
+export interface CardSlot {
+  id: string;
+  card_id: string;
+  slot_type: SlotType;
+  price: number;
+  business_name: string | null;
+  contact_id: string | null;
+  status: SlotStatus;
+  created_at: string;
+}
+
+export interface Card {
+  id: string;
+  city: string;
+  month: string;
+  status: CardStatus;
+  notes: string | null;
+  created_at: string;
+  card_slots?: CardSlot[];
 }
