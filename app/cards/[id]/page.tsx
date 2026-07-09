@@ -8,9 +8,11 @@ import type { Card, CardSlot, Contact, SlotType } from '@/lib/types';
 import {
   BREAK_EVEN_COST,
   CARD_STATUSES,
+  citiesMatch,
   contactDisplayName,
   formatCardMonth,
   SLOT_TYPES,
+  WON_OR_BETTER_STAGES,
 } from '@/lib/types';
 import ContactCombobox from '@/components/ContactCombobox';
 
@@ -22,19 +24,22 @@ export default function CardDetailPage() {
   const [card, setCard] = useState<Card | null>(null);
   const [slots, setSlots] = useState<CardSlot[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
+  const [wonContactIds, setWonContactIds] = useState<Set<string>>(new Set());
   const [notes, setNotes] = useState('');
   const [showAddSlot, setShowAddSlot] = useState(false);
 
   async function load() {
-    const [{ data: c }, { data: s }, { data: ct }] = await Promise.all([
+    const [{ data: c }, { data: s }, { data: ct }, { data: wonDeals }] = await Promise.all([
       supabase.from('cards').select('*').eq('id', id).single(),
       supabase.from('card_slots').select('*').eq('card_id', id).order('created_at', { ascending: true }),
       supabase.from('contacts').select('*').order('name'),
+      supabase.from('deals').select('contact_id').in('stage', WON_OR_BETTER_STAGES),
     ]);
     setCard(c);
     setNotes(c?.notes ?? '');
     setSlots(s ?? []);
     setContacts(ct ?? []);
+    setWonContactIds(new Set((wonDeals ?? []).map((d) => d.contact_id).filter((v): v is string => !!v)));
   }
 
   useEffect(() => {
@@ -106,6 +111,13 @@ export default function CardDetailPage() {
   const revenue = filledSlots.reduce((sum, s) => sum + s.price, 0);
   const profit = revenue - BREAK_EVEN_COST;
   const pctBreakEven = Math.round((revenue / BREAK_EVEN_COST) * 100);
+
+  // Only contacts in this card's city with a Won-or-better deal are offered
+  // when adding a new slot -- keeps slot assignment scoped to real prospects
+  // for this mailer instead of the whole contact list.
+  const eligibleContacts = contacts.filter(
+    (c) => wonContactIds.has(c.id) && citiesMatch(c.location, card.city)
+  );
 
   return (
     <div className="space-y-6">
@@ -190,7 +202,7 @@ export default function CardDetailPage() {
           </button>
         </div>
 
-        {showAddSlot && <AddSlotForm contacts={contacts} onAdd={addSlot} />}
+        {showAddSlot && <AddSlotForm contacts={eligibleContacts} onAdd={addSlot} />}
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -345,7 +357,12 @@ function AddSlotForm({
         value={businessName}
         onChange={(e) => setBusinessName(e.target.value)}
       />
-      <ContactCombobox contacts={contacts} value={contactId} onChange={setContactId} />
+      <div>
+        <ContactCombobox contacts={contacts} value={contactId} onChange={setContactId} />
+        <p className="mt-1 text-xs text-ink/40">
+          Only showing contacts in this city with a Won-or-better deal.
+        </p>
+      </div>
       <div className="sm:col-span-2">
         <button type="submit" className="btn-primary">
           Add slot

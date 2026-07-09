@@ -42,6 +42,24 @@ export const STAGE_TRANSITIONS: Record<DealStage, DealStage[]> = {
   lost: ['called_contacted'],
 };
 
+// Stages counted as "won or better" for card-slot assignment eligibility.
+export const WON_OR_BETTER_STAGES: DealStage[] = [
+  'won',
+  'invoice_sent',
+  'payment_received',
+  'ad_made',
+  'ad_confirmed',
+];
+
+// Loose city match used to line up a contact's free-text location with a
+// card's city (e.g. contact location "Portland, OR" vs card city "Portland").
+export function citiesMatch(a: string | null | undefined, b: string | null | undefined): boolean {
+  const x = (a ?? '').trim().toLowerCase();
+  const y = (b ?? '').trim().toLowerCase();
+  if (!x || !y) return false;
+  return x.includes(y) || y.includes(x);
+}
+
 export interface Contact {
   id: string;
   name: string | null;

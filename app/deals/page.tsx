@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
-import { contactDisplayName, DEAL_STAGES, formatCardMonth, STAGE_TRANSITIONS } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS } from '@/lib/types';
 import ContactCombobox from '@/components/ContactCombobox';
 
 // Roughly matches the whiteboard process map: blue/orange/pink for the lead
@@ -131,7 +131,7 @@ function DealCard({
         <p className="mt-1 text-xs text-ink/60">${Number(deal.value).toLocaleString()}</p>
       )}
 
-      {canAssignToCard && <AssignToCardControl deal={deal} />}
+      {canAssignToCard && <AssignmentStatus contactId={deal.contacts!.id} />}
 
       {nextStages.length > 0 && (
         <select
@@ -181,99 +181,31 @@ function DealCard({
   );
 }
 
-type MatchingSlot = {
-  id: string;
-  slot_type: string;
-  price: number;
-  card: { id: string; city: string; month: string };
-};
-
-// Won deals with a contact location can be manually linked to an open slot
-// on an active card for that city -- never auto-assigned, per spec.
-function AssignToCardControl({ deal }: { deal: Deal }) {
+// Read-only: whether this contact has been linked to any card slot yet.
+// Assignment itself happens from the card's Slots table, not here.
+function AssignmentStatus({ contactId }: { contactId: string }) {
   const supabase = createClient();
-  const [open, setOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [slots, setSlots] = useState<MatchingSlot[] | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
+  const [assigned, setAssigned] = useState<boolean | null>(null);
 
-  async function toggle() {
-    const opening = !open;
-    setOpen(opening);
-    if (opening && slots === null) {
-      setLoading(true);
-      const location = (deal.contacts?.location ?? '').trim().toLowerCase();
-      const { data: activeCards } = await supabase
-        .from('cards')
-        .select('id, city, month, status')
-        .in('status', ['filling', 'ready']);
-      const matchingCards = (activeCards ?? []).filter((c) => {
-        const city = c.city.trim().toLowerCase();
-        return city.length > 0 && (location.includes(city) || city.includes(location));
-      });
-      if (matchingCards.length === 0) {
-        setSlots([]);
-      } else {
-        const { data: openSlots } = await supabase
-          .from('card_slots')
-          .select('id, card_id, slot_type, price')
-          .eq('status', 'open')
-          .in(
-            'card_id',
-            matchingCards.map((c) => c.id)
-          );
-        const withCard: MatchingSlot[] = (openSlots ?? []).map((s: any) => ({
-          id: s.id,
-          slot_type: s.slot_type,
-          price: s.price,
-          card: matchingCards.find((c) => c.id === s.card_id)!,
-        }));
-        setSlots(withCard);
-      }
-      setLoading(false);
+  useEffect(() => {
+    let cancelled = false;
+    async function check() {
+      const { data } = await supabase.from('card_slots').select('id').eq('contact_id', contactId).limit(1);
+      if (!cancelled) setAssigned((data?.length ?? 0) > 0);
     }
-  }
+    check();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [contactId]);
 
-  async function assign(slotId: string) {
-    const businessName = contactDisplayName(deal.contacts!);
-    await supabase
-      .from('card_slots')
-      .update({ business_name: businessName, contact_id: deal.contacts!.id, status: 'filled' })
-      .eq('id', slotId);
-    setSlots((prev) => prev?.filter((s) => s.id !== slotId) ?? null);
-    setMessage(`Assigned to ${businessName}'s card slot.`);
-  }
+  if (assigned === null) return null;
 
   return (
-    <div className="mt-2">
-      <button
-        type="button"
-        onClick={toggle}
-        className="rounded-md bg-accentSoft px-2 py-1 text-[11px] font-medium text-accent hover:bg-accentSoft/70"
-      >
-        {open ? 'Hide card slots' : 'Assign to card slot'}
-      </button>
-      {open && (
-        <div className="mt-1 rounded-md border border-black/10 bg-white p-2 text-xs">
-          {loading && <p className="text-ink/40">Loading open slots...</p>}
-          {!loading && slots?.length === 0 && (
-            <p className="text-ink/40">No open slots on an active card in this city.</p>
-          )}
-          {!loading &&
-            slots?.map((s) => (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => assign(s.id)}
-                className="block w-full rounded px-1.5 py-1 text-left hover:bg-black/5"
-              >
-                {s.card.city} · {formatCardMonth(s.card.month)} · {s.slot_type} (${s.price})
-              </button>
-            ))}
-          {message && <p className="mt-1 text-accent">{message}</p>}
-        </div>
-      )}
-    </div>
+    <p className={`mt-2 text-xs font-medium ${assigned ? 'text-green-700' : 'text-red-700'}`}>
+      {assigned ? 'Assigned to slot' : 'Not assigned to slot'}
+    </p>
   );
 }
 
