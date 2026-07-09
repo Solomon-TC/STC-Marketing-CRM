@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
 import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS, WON_OR_BETTER_STAGES } from '@/lib/types';
@@ -29,12 +29,14 @@ export default function DealsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [initialContactId, setInitialContactId] = useState<string | undefined>(undefined);
+  const [industryFilter, setIndustryFilter] = useState('all');
+  const [locationFilter, setLocationFilter] = useState('all');
 
   async function load() {
     const [{ data: d }, { data: c }] = await Promise.all([
       supabase
         .from('deals')
-        .select('*, contacts(id, name, company, location)')
+        .select('*, contacts(id, name, company, location, industry)')
         .order('created_at', { ascending: false }),
       supabase.from('contacts').select('*').order('name'),
     ]);
@@ -60,6 +62,21 @@ export default function DealsPage() {
     await supabase.from('deals').update({ stage }).eq('id', deal.id);
     load();
   }
+
+  const industries = useMemo(
+    () => Array.from(new Set(deals.map((d) => d.contacts?.industry).filter(Boolean))) as string[],
+    [deals]
+  );
+  const locations = useMemo(
+    () => Array.from(new Set(deals.map((d) => d.contacts?.location).filter(Boolean))) as string[],
+    [deals]
+  );
+
+  const filteredDeals = deals.filter((d) => {
+    const matchesIndustry = industryFilter === 'all' || d.contacts?.industry === industryFilter;
+    const matchesLocation = locationFilter === 'all' || d.contacts?.location === locationFilter;
+    return matchesIndustry && matchesLocation;
+  });
 
   return (
     <div className="space-y-6">
@@ -87,9 +104,36 @@ export default function DealsPage() {
         />
       )}
 
+      <div className="card flex flex-wrap gap-3">
+        <select
+          className="input max-w-[180px]"
+          value={industryFilter}
+          onChange={(e) => setIndustryFilter(e.target.value)}
+        >
+          <option value="all">All industries</option>
+          {industries.map((i) => (
+            <option key={i} value={i}>
+              {i}
+            </option>
+          ))}
+        </select>
+        <select
+          className="input max-w-[180px]"
+          value={locationFilter}
+          onChange={(e) => setLocationFilter(e.target.value)}
+        >
+          <option value="all">All locations</option>
+          {locations.map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </select>
+      </div>
+
       <div className="flex gap-4 overflow-x-auto pb-4">
         {DEAL_STAGES.map((stage) => {
-          const stageDeals = deals.filter((d) => d.stage === stage.value);
+          const stageDeals = filteredDeals.filter((d) => d.stage === stage.value);
           const colors = STAGE_COLORS[stage.value];
           return (
             <div key={stage.value} className="w-64 shrink-0">

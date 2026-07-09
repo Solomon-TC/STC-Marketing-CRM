@@ -89,7 +89,7 @@ export interface Deal {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  contacts?: Pick<Contact, 'id' | 'name' | 'company' | 'location'> | null;
+  contacts?: Pick<Contact, 'id' | 'name' | 'company' | 'location' | 'industry'> | null;
 }
 
 export interface Task {
