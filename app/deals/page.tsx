@@ -182,7 +182,11 @@ function DealCard({
   );
 }
 
-// Read-only: whether this contact has been linked to any card slot yet.
+// Read-only: whether this contact is linked to a slot on a currently active
+// card. Scoped to active cards (not "ever assigned") so a repeat contact from
+// a past, already-sent card still shows as unassigned until they're placed
+// on a new one -- otherwise a returning customer's new deal would look
+// already handled when it isn't.
 // Assignment itself happens from the card's Slots table, not here.
 function AssignmentStatus({ contactId }: { contactId: string }) {
   const supabase = createClient();
@@ -191,7 +195,18 @@ function AssignmentStatus({ contactId }: { contactId: string }) {
   useEffect(() => {
     let cancelled = false;
     async function check() {
-      const { data } = await supabase.from('card_slots').select('id').eq('contact_id', contactId).limit(1);
+      const { data: activeCards } = await supabase.from('cards').select('id').in('status', ['filling', 'ready']);
+      const activeCardIds = (activeCards ?? []).map((c) => c.id);
+      if (activeCardIds.length === 0) {
+        if (!cancelled) setAssigned(false);
+        return;
+      }
+      const { data } = await supabase
+        .from('card_slots')
+        .select('id')
+        .eq('contact_id', contactId)
+        .in('card_id', activeCardIds)
+        .limit(1);
       if (!cancelled) setAssigned((data?.length ?? 0) > 0);
     }
     check();
