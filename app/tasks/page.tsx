@@ -13,7 +13,7 @@ export default function TasksPage() {
   async function load() {
     const { data } = await supabase
       .from('tasks')
-      .select('*, contacts(id, name, company)')
+      .select('*, contacts(id, company)')
       .order('due_date', { ascending: true });
     setTasks((data as any) ?? []);
   }

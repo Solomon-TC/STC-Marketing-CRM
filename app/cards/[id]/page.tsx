@@ -32,7 +32,7 @@ export default function CardDetailPage() {
     const [{ data: c }, { data: s }, { data: ct }, { data: wonDeals }] = await Promise.all([
       supabase.from('cards').select('*').eq('id', id).single(),
       supabase.from('card_slots').select('*').eq('card_id', id).order('created_at', { ascending: true }),
-      supabase.from('contacts').select('*').order('name'),
+      supabase.from('contacts').select('*').order('company'),
       supabase.from('deals').select('contact_id').in('stage', WON_OR_BETTER_STAGES),
     ]);
     setCard(c);

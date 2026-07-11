@@ -12,7 +12,7 @@ export default async function DashboardPage() {
     supabase.from('deals').select('stage, value'),
     supabase
       .from('tasks')
-      .select('id, title, due_date, contacts(id, name, company)')
+      .select('id, title, due_date, contacts(id, company)')
       .eq('done', false)
       .order('due_date', { ascending: true })
       .limit(6),

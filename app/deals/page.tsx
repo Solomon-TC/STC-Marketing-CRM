@@ -37,9 +37,9 @@ export default function DealsPage() {
     const [{ data: d }, { data: c }] = await Promise.all([
       supabase
         .from('deals')
-        .select('*, contacts(id, name, company, location, industry)')
+        .select('*, contacts(id, company, location, industry)')
         .order('created_at', { ascending: false }),
-      supabase.from('contacts').select('*').order('name'),
+      supabase.from('contacts').select('*').order('company'),
     ]);
     setDeals((d as any) ?? []);
     setContacts(c ?? []);
