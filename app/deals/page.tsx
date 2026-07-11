@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, DealStage } from '@/lib/types';
 import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS, WON_OR_BETTER_STAGES } from '@/lib/types';
 import ContactCombobox from '@/components/ContactCombobox';
+import ContactNotesLog from '@/components/ContactNotesLog';
 
 // Roughly matches the whiteboard process map: blue/orange/pink for the lead
 // stages, purple for the follow-up stages, a green shade per money-in-motion
@@ -164,6 +165,7 @@ function DealCard({
   onMove: (deal: Deal, stage: DealStage) => void;
 }) {
   const [showManual, setShowManual] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
   const nextStages = STAGE_TRANSITIONS[deal.stage];
   const canAssignToCard =
     WON_OR_BETTER_STAGES.includes(deal.stage) && deal.value != null && !!deal.contacts?.location;
@@ -177,6 +179,23 @@ function DealCard({
       )}
 
       {canAssignToCard && <AssignmentStatus contactId={deal.contacts!.id} />}
+
+      {deal.contacts && (
+        <div className="mt-2">
+          <button
+            type="button"
+            onClick={() => setShowNotes((v) => !v)}
+            className="text-[11px] text-ink/40 hover:text-ink/60 hover:underline"
+          >
+            {showNotes ? 'Hide notes' : 'Notes'}
+          </button>
+          {showNotes && (
+            <div className="mt-1 rounded-md border border-black/10 p-2">
+              <ContactNotesLog contactId={deal.contacts.id} />
+            </div>
+          )}
+        </div>
+      )}
 
       {nextStages.length > 0 && (
         <select

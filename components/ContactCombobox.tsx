@@ -78,7 +78,6 @@ export default function ContactCombobox({
               onClick={() => select(c.id)}
             >
               {contactDisplayName(c)}
-              {c.name && c.company && <span className="text-ink/40"> · {c.company}</span>}
             </button>
           ))}
         </div>

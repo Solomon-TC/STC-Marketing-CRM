@@ -5,7 +5,6 @@ import Papa from 'papaparse';
 import { createClient } from '@/lib/supabase/client';
 
 const TARGET_FIELDS = [
-  { key: 'name', label: 'Name' },
   { key: 'company', label: 'Company (required)' },
   { key: 'email', label: 'Email' },
   { key: 'phone', label: 'Phone' },
@@ -13,6 +12,8 @@ const TARGET_FIELDS = [
   { key: 'location', label: 'Location' },
   { key: 'notes', label: 'Notes' },
 ];
+
+const CONTACT_FIELDS = TARGET_FIELDS.filter((f) => f.key !== 'notes');
 
 export default function ImportPage() {
   const supabase = createClient();
@@ -54,24 +55,38 @@ export default function ImportPage() {
     setImporting(true);
     setResult(null);
 
-    const payload = rows
+    const parsed = rows
       .map((row) => {
         const contact: Record<string, string | null> = {};
-        TARGET_FIELDS.forEach((field) => {
+        CONTACT_FIELDS.forEach((field) => {
           const sourceCol = mapping[field.key];
           contact[field.key] = sourceCol ? row[sourceCol]?.trim() || null : null;
         });
-        return contact;
+        const notesCol = mapping.notes;
+        const noteBody = notesCol ? row[notesCol]?.trim() || null : null;
+        return { contact, noteBody };
       })
-      .filter((c) => c.company);
+      .filter((r) => r.contact.company);
 
-    const { error } = await supabase.from('contacts').insert(payload);
+    const { data: inserted, error } = await supabase
+      .from('contacts')
+      .insert(parsed.map((r) => r.contact))
+      .select('id');
+
+    if (!error && inserted) {
+      const noteRows = inserted
+        .map((c, i) => ({ contact_id: c.id, body: parsed[i].noteBody }))
+        .filter((n): n is { contact_id: string; body: string } => !!n.body);
+      if (noteRows.length > 0) {
+        await supabase.from('contact_notes').insert(noteRows);
+      }
+    }
 
     setImporting(false);
     setResult(
       error
         ? `Import failed: ${error.message}`
-        : `Imported ${payload.length} ${payload.length === 1 ? 'contact' : 'contacts'}.`
+        : `Imported ${parsed.length} ${parsed.length === 1 ? 'contact' : 'contacts'}.`
     );
     if (!error) {
       setRows([]);

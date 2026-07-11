@@ -29,11 +29,12 @@ alter type deal_stage rename value 'follow_up' to 'followed_up';
 alter type deal_stage rename value 'invoice_received' to 'payment_received';
 
 -- 2. Contacts
--- name is optional: bulk imports from a spreadsheet with only company names
--- are supported, so every contact needs at least a name or a company.
+-- Company is the sole identifier (no personal "name" field -- see
+-- remove_contact_name.sql for the migration on an existing project).
+-- notes is legacy free text, superseded by the contact_notes log below;
+-- kept in place for existing data but no longer read or written by the app.
 create table contacts (
   id uuid primary key default gen_random_uuid(),
-  name text,
   company text,
   email text,
   phone text,
@@ -41,13 +42,11 @@ create table contacts (
   location text,
   notes text,
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  constraint contacts_name_or_company_present check (name is not null or company is not null)
+  updated_at timestamptz not null default now()
 );
 
 create index contacts_industry_idx on contacts (industry);
 create index contacts_location_idx on contacts (location);
-create index contacts_name_idx on contacts (name);
 
 -- 3. Deals
 create table deals (
@@ -171,6 +170,26 @@ create policy "authenticated users can do everything on cards"
 
 create policy "authenticated users can do everything on card_slots"
   on card_slots for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- 9. Contact notes log
+-- Every note is its own timestamped entry (not one big free-text field), so
+-- there's a real history of contact activity -- newest first in the app.
+create table contact_notes (
+  id uuid primary key default gen_random_uuid(),
+  contact_id uuid not null references contacts(id) on delete cascade,
+  body text not null,
+  created_at timestamptz not null default now()
+);
+
+create index contact_notes_contact_idx on contact_notes (contact_id);
+
+alter table contact_notes enable row level security;
+
+create policy "authenticated users can do everything on contact_notes"
+  on contact_notes for all
   to authenticated
   using (true)
   with check (true);

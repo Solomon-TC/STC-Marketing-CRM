@@ -62,21 +62,18 @@ export function citiesMatch(a: string | null | undefined, b: string | null | und
 
 export interface Contact {
   id: string;
-  name: string | null;
   company: string | null;
   email: string | null;
   phone: string | null;
   industry: string | null;
   location: string | null;
-  notes: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// Contacts imported without a name (e.g. a spreadsheet with only company names)
-// fall back to their company as the display label.
-export function contactDisplayName(contact: { name: string | null; company: string | null }): string {
-  return contact.name || contact.company || 'Unnamed contact';
+// Company is the sole identifier for a contact (no personal name field).
+export function contactDisplayName(contact: { company: string | null }): string {
+  return contact.company || 'Unnamed contact';
 }
 
 export interface Deal {
@@ -89,7 +86,7 @@ export interface Deal {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  contacts?: Pick<Contact, 'id' | 'name' | 'company' | 'location' | 'industry'> | null;
+  contacts?: Pick<Contact, 'id' | 'company' | 'location' | 'industry'> | null;
 }
 
 export interface Task {
@@ -100,7 +97,28 @@ export interface Task {
   due_date: string | null;
   done: boolean;
   created_at: string;
-  contacts?: Pick<Contact, 'id' | 'name' | 'company'> | null;
+  contacts?: Pick<Contact, 'id' | 'company'> | null;
+}
+
+// --- Contact notes log ---
+// Every note is a separate timestamped entry rather than one big free-text
+// field, so there's a real history instead of an ever-growing blob.
+
+export interface ContactNote {
+  id: string;
+  contact_id: string;
+  body: string;
+  created_at: string;
+}
+
+export function formatNoteTimestamp(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
 }
 
 // --- Card management ---

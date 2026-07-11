@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, Deal, Task } from '@/lib/types';
 import { contactDisplayName, DEAL_STAGES } from '@/lib/types';
+import ContactNotesLog from '@/components/ContactNotesLog';
 
 export default function ContactDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,13 +43,11 @@ export default function ContactDetailPage() {
     await supabase
       .from('contacts')
       .update({
-        name: contact.name,
         company: contact.company,
         email: contact.email,
         phone: contact.phone,
         industry: contact.industry,
         location: contact.location,
-        notes: contact.notes,
       })
       .eq('id', contact.id);
     setSaving(false);
@@ -87,9 +86,9 @@ export default function ContactDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/contacts" className="text-sm text-accent hover:underline">
+          <button onClick={() => router.back()} className="text-sm text-accent hover:underline">
             &larr; Back to contacts
-          </Link>
+          </button>
           <h1 className="mt-1 font-serif text-2xl">{contactDisplayName(contact)}</h1>
         </div>
         <button onClick={handleDelete} className="text-sm text-warn hover:underline">
@@ -98,16 +97,10 @@ export default function ContactDetailPage() {
       </div>
 
       <form onSubmit={handleSave} className="card grid gap-3 sm:grid-cols-2">
-        <Field label="Name">
+        <Field label="Company" full>
           <input
             className="input"
-            value={contact.name ?? ''}
-            onChange={(e) => setContact({ ...contact, name: e.target.value || null })}
-          />
-        </Field>
-        <Field label="Company">
-          <input
-            className="input"
+            required
             value={contact.company ?? ''}
             onChange={(e) => setContact({ ...contact, company: e.target.value })}
           />
@@ -140,20 +133,17 @@ export default function ContactDetailPage() {
             onChange={(e) => setContact({ ...contact, location: e.target.value })}
           />
         </Field>
-        <Field label="Notes" full>
-          <textarea
-            className="input"
-            rows={4}
-            value={contact.notes ?? ''}
-            onChange={(e) => setContact({ ...contact, notes: e.target.value })}
-          />
-        </Field>
         <div className="sm:col-span-2">
           <button type="submit" disabled={saving} className="btn-primary">
             {saving ? 'Saving...' : 'Save changes'}
           </button>
         </div>
       </form>
+
+      <div className="card">
+        <h2 className="mb-3 text-sm font-medium">Notes</h2>
+        <ContactNotesLog contactId={contact.id} />
+      </div>
 
       <div className="card">
         <div className="mb-3 flex items-center justify-between">
