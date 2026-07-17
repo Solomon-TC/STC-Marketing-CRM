@@ -11,6 +11,7 @@ const links = [
   { href: '/deals', label: 'Spotlights Pipeline' },
   { href: '/website-deals', label: 'Websites Pipeline' },
   { href: '/cards', label: 'Cards' },
+  { href: '/finances', label: 'Finances' },
   { href: '/tasks', label: 'Tasks' },
   { href: '/import', label: 'Import' },
 ];
@@ -30,16 +31,16 @@ export default function Navbar() {
   return (
     <header className="border-b border-black/10 bg-white">
       <div className="mx-auto flex max-w-[1800px] items-center justify-between px-4 py-3 sm:px-6 lg:px-10">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
           <span className="font-serif text-base">STC Marketing CRM</span>
-          <nav className="hidden gap-1 sm:flex">
+          <nav className="hidden gap-0.5 sm:flex">
             {links.map((link) => {
               const active = pathname === link.href;
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded-md px-3 py-1.5 text-sm transition ${
+                  className={`rounded-md px-2 py-1.5 text-sm transition ${
                     active
                       ? 'bg-accentSoft text-accent font-medium'
                       : 'text-ink/70 hover:bg-black/5'

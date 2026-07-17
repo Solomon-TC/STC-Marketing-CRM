@@ -47,7 +47,9 @@ export default function WebsiteDealsPage() {
   }, []);
 
   async function moveStage(deal: WebsiteDeal, stage: DealStage) {
-    await supabase.from('website_deals').update({ stage }).eq('id', deal.id);
+    const patch: { stage: DealStage; won_at?: string } = { stage };
+    if (stage === 'won') patch.won_at = new Date().toISOString();
+    await supabase.from('website_deals').update(patch).eq('id', deal.id);
     load();
   }
 

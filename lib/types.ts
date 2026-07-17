@@ -80,6 +80,10 @@ export interface Deal {
   stage: DealStage;
   value: number | null;
   expected_close_date: string | null;
+  // Set by the app the moment a deal is moved to "won" -- the timeline basis
+  // for the Finances charts, since a stage change is the only reliable
+  // revenue-recognition event this data model has.
+  won_at: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -110,6 +114,7 @@ export interface WebsiteDeal {
   initial_value: number | null;
   recurring_value: number | null;
   expected_close_date: string | null;
+  won_at: string | null;
   notes: string | null;
   created_at: string;
   updated_at: string;

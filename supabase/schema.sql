@@ -36,6 +36,8 @@ create index contacts_industry_idx on contacts (industry);
 create index contacts_location_idx on contacts (location);
 
 -- 3. Deals
+-- won_at records the first time a deal was moved to "won" (set by the app,
+-- not the database) -- it's the timeline basis for the Finances charts.
 create table deals (
   id uuid primary key default gen_random_uuid(),
   contact_id uuid references contacts(id) on delete cascade,
@@ -43,6 +45,7 @@ create table deals (
   stage deal_stage not null default 'warm_lead',
   value numeric(12,2),
   expected_close_date date,
+  won_at timestamptz,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -195,6 +198,7 @@ create table website_deals (
   initial_value numeric(12,2),
   recurring_value numeric(12,2),
   expected_close_date date,
+  won_at timestamptz,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -213,3 +217,10 @@ create policy "authenticated users can do everything on website_deals"
   to authenticated
   using (true)
   with check (true);
+
+-- 11. Finances
+-- The Finances tab reads Won-or-better deals from both pipelines and needs
+-- to update live, so both tables are added to Supabase's realtime
+-- publication (RLS above still applies to what a client can actually read).
+alter publication supabase_realtime add table deals;
+alter publication supabase_realtime add table website_deals;
