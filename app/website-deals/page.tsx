@@ -2,20 +2,18 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import type { Contact, Deal, DealStage } from '@/lib/types';
-import {
-  contactDisplayName,
-  DEAL_STAGES,
-  STAGE_COLORS,
-  STAGE_TRANSITIONS,
-  WON_OR_BETTER_STAGES,
-} from '@/lib/types';
+import type { Contact, DealStage, WebsiteDeal } from '@/lib/types';
+import { contactDisplayName, DEAL_STAGES, STAGE_COLORS, STAGE_TRANSITIONS } from '@/lib/types';
 import ContactCombobox from '@/components/ContactCombobox';
 import ContactNotesLog from '@/components/ContactNotesLog';
 
-export default function DealsPage() {
+// The Websites Pipeline: same stages, contacts, and card-style layout as the
+// Spotlights Pipeline (app/deals/page.tsx), but backed by its own
+// website_deals table, tracking two dollar amounts instead of one, and with
+// no link to the Cards system.
+export default function WebsiteDealsPage() {
   const supabase = createClient();
-  const [deals, setDeals] = useState<Deal[]>([]);
+  const [deals, setDeals] = useState<WebsiteDeal[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [initialContactId, setInitialContactId] = useState<string | undefined>(undefined);
@@ -25,7 +23,7 @@ export default function DealsPage() {
   async function load() {
     const [{ data: d }, { data: c }] = await Promise.all([
       supabase
-        .from('deals')
+        .from('website_deals')
         .select('*, contacts(id, company, location, industry)')
         .order('created_at', { ascending: false }),
       supabase.from('contacts').select('*').order('company'),
@@ -36,25 +34,25 @@ export default function DealsPage() {
 
   useEffect(() => {
     load();
-    // Arriving from a contact's "Add to pipeline" button: open the form
-    // pre-filled with that contact, then drop the param so a refresh doesn't
-    // reopen it.
+    // Same convenience pattern as the Spotlights pipeline: a contactId query
+    // param opens the form pre-filled, then gets dropped so a refresh
+    // doesn't reopen it. Nothing links here today, but kept for parity.
     const contactId = new URLSearchParams(window.location.search).get('contactId');
     if (contactId) {
       setInitialContactId(contactId);
       setShowForm(true);
-      window.history.replaceState(null, '', '/deals');
+      window.history.replaceState(null, '', '/website-deals');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function moveStage(deal: Deal, stage: DealStage) {
-    await supabase.from('deals').update({ stage }).eq('id', deal.id);
+  async function moveStage(deal: WebsiteDeal, stage: DealStage) {
+    await supabase.from('website_deals').update({ stage }).eq('id', deal.id);
     load();
   }
 
-  async function deleteDeal(deal: Deal) {
-    await supabase.from('deals').delete().eq('id', deal.id);
+  async function deleteDeal(deal: WebsiteDeal) {
+    await supabase.from('website_deals').delete().eq('id', deal.id);
     load();
   }
 
@@ -77,7 +75,7 @@ export default function DealsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-2xl">Spotlights Pipeline</h1>
+          <h1 className="font-serif text-2xl">Websites Pipeline</h1>
           <p className="text-sm text-ink/60">
             {deals.length} {deals.length === 1 ? 'deal' : 'deals'} across your pipeline
           </p>
@@ -88,7 +86,7 @@ export default function DealsPage() {
       </div>
 
       {showForm && (
-        <NewDealForm
+        <NewWebsiteDealForm
           contacts={contacts}
           initialContactId={initialContactId}
           onCreated={() => {
@@ -140,7 +138,7 @@ export default function DealsPage() {
               </div>
               <div className="space-y-2">
                 {stageDeals.map((deal) => (
-                  <DealCard
+                  <WebsiteDealCard
                     key={deal.id}
                     deal={deal}
                     contacts={contacts}
@@ -160,35 +158,36 @@ export default function DealsPage() {
 
 const DELETE_OPTION = '__delete__';
 
-function DealCard({
+function WebsiteDealCard({
   deal,
   contacts,
   onMove,
   onDelete,
   onUpdated,
 }: {
-  deal: Deal;
+  deal: WebsiteDeal;
   contacts: Contact[];
-  onMove: (deal: Deal, stage: DealStage) => void;
-  onDelete: (deal: Deal) => void;
+  onMove: (deal: WebsiteDeal, stage: DealStage) => void;
+  onDelete: (deal: WebsiteDeal) => void;
   onUpdated: () => void;
 }) {
   const [showManual, setShowManual] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const nextStages = STAGE_TRANSITIONS[deal.stage];
-  const canAssignToCard =
-    WON_OR_BETTER_STAGES.includes(deal.stage) && deal.value != null && !!deal.contacts?.location;
 
   return (
     <div className="card">
       <p className="text-sm font-medium">{deal.title}</p>
       {deal.contacts && <p className="text-xs text-ink/50">{contactDisplayName(deal.contacts)}</p>}
-      {deal.value != null && (
-        <p className="mt-1 text-xs text-ink/60">${Number(deal.value).toLocaleString()}</p>
+      {deal.initial_value != null && (
+        <p className="mt-1 text-xs text-ink/60">Initial: ${Number(deal.initial_value).toLocaleString()}</p>
       )}
-
-      {canAssignToCard && <AssignmentStatus contactId={deal.contacts!.id} />}
+      {deal.recurring_value != null && (
+        <p className="text-xs text-ink/60">
+          Recurring: ${Number(deal.recurring_value).toLocaleString()}/mo
+        </p>
+      )}
 
       {deal.contacts && (
         <div className="mt-2">
@@ -216,7 +215,7 @@ function DealCard({
       </button>
 
       {showEdit && (
-        <EditDealForm
+        <EditWebsiteDealForm
           deal={deal}
           contacts={contacts}
           onSaved={() => {
@@ -282,13 +281,13 @@ function DealCard({
   );
 }
 
-function EditDealForm({
+function EditWebsiteDealForm({
   deal,
   contacts,
   onSaved,
   onCancel,
 }: {
-  deal: Deal;
+  deal: WebsiteDeal;
   contacts: Contact[];
   onSaved: () => void;
   onCancel: () => void;
@@ -297,7 +296,8 @@ function EditDealForm({
   const [form, setForm] = useState({
     title: deal.title,
     contact_id: deal.contact_id ?? '',
-    value: deal.value != null ? String(deal.value) : '',
+    initial_value: deal.initial_value != null ? String(deal.initial_value) : '',
+    recurring_value: deal.recurring_value != null ? String(deal.recurring_value) : '',
     expected_close_date: deal.expected_close_date ?? '',
   });
   const [saving, setSaving] = useState(false);
@@ -308,11 +308,12 @@ function EditDealForm({
     setSaving(true);
     setError(null);
     const { error } = await supabase
-      .from('deals')
+      .from('website_deals')
       .update({
         title: form.title,
         contact_id: form.contact_id || null,
-        value: form.value ? Number(form.value) : null,
+        initial_value: form.initial_value ? Number(form.initial_value) : null,
+        recurring_value: form.recurring_value ? Number(form.recurring_value) : null,
         expected_close_date: form.expected_close_date || null,
       })
       .eq('id', deal.id);
@@ -340,10 +341,17 @@ function EditDealForm({
       />
       <input
         className="input text-xs"
-        placeholder="Value ($)"
+        placeholder="Initial Value ($)"
         type="number"
-        value={form.value}
-        onChange={(e) => setForm({ ...form, value: e.target.value })}
+        value={form.initial_value}
+        onChange={(e) => setForm({ ...form, initial_value: e.target.value })}
+      />
+      <input
+        className="input text-xs"
+        placeholder="Recurring Value ($/mo)"
+        type="number"
+        value={form.recurring_value}
+        onChange={(e) => setForm({ ...form, recurring_value: e.target.value })}
       />
       <input
         className="input text-xs"
@@ -364,50 +372,7 @@ function EditDealForm({
   );
 }
 
-// Read-only: whether this contact is linked to a slot on a currently active
-// card. Scoped to active cards (not "ever assigned") so a repeat contact from
-// a past, already-sent card still shows as unassigned until they're placed
-// on a new one -- otherwise a returning customer's new deal would look
-// already handled when it isn't.
-// Assignment itself happens from the card's Slots table, not here.
-function AssignmentStatus({ contactId }: { contactId: string }) {
-  const supabase = createClient();
-  const [assigned, setAssigned] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function check() {
-      const { data: activeCards } = await supabase.from('cards').select('id').in('status', ['filling', 'ready']);
-      const activeCardIds = (activeCards ?? []).map((c) => c.id);
-      if (activeCardIds.length === 0) {
-        if (!cancelled) setAssigned(false);
-        return;
-      }
-      const { data } = await supabase
-        .from('card_slots')
-        .select('id')
-        .eq('contact_id', contactId)
-        .in('card_id', activeCardIds)
-        .limit(1);
-      if (!cancelled) setAssigned((data?.length ?? 0) > 0);
-    }
-    check();
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contactId]);
-
-  if (assigned === null) return null;
-
-  return (
-    <p className={`mt-2 text-xs font-medium ${assigned ? 'text-green-700' : 'text-red-700'}`}>
-      {assigned ? 'Assigned to slot' : 'Not assigned to slot'}
-    </p>
-  );
-}
-
-function NewDealForm({
+function NewWebsiteDealForm({
   contacts,
   initialContactId,
   onCreated,
@@ -421,7 +386,8 @@ function NewDealForm({
     title: '',
     contact_id: initialContactId ?? '',
     stage: 'warm_lead' as DealStage,
-    value: '',
+    initial_value: '',
+    recurring_value: '',
     expected_close_date: '',
   });
   const [saving, setSaving] = useState(false);
@@ -431,11 +397,12 @@ function NewDealForm({
     e.preventDefault();
     setSaving(true);
     setError(null);
-    const { error } = await supabase.from('deals').insert({
+    const { error } = await supabase.from('website_deals').insert({
       title: form.title,
       contact_id: form.contact_id || null,
       stage: form.stage,
-      value: form.value ? Number(form.value) : null,
+      initial_value: form.initial_value ? Number(form.initial_value) : null,
+      recurring_value: form.recurring_value ? Number(form.recurring_value) : null,
       expected_close_date: form.expected_close_date || null,
     });
     setSaving(false);
@@ -473,16 +440,23 @@ function NewDealForm({
       </select>
       <input
         className="input"
-        placeholder="Value ($)"
-        type="number"
-        value={form.value}
-        onChange={(e) => setForm({ ...form, value: e.target.value })}
-      />
-      <input
-        className="input"
         type="date"
         value={form.expected_close_date}
         onChange={(e) => setForm({ ...form, expected_close_date: e.target.value })}
+      />
+      <input
+        className="input"
+        placeholder="Initial Value ($)"
+        type="number"
+        value={form.initial_value}
+        onChange={(e) => setForm({ ...form, initial_value: e.target.value })}
+      />
+      <input
+        className="input"
+        placeholder="Recurring Value ($/mo)"
+        type="number"
+        value={form.recurring_value}
+        onChange={(e) => setForm({ ...form, recurring_value: e.target.value })}
       />
       {error && <p className="text-sm text-warn sm:col-span-2">{error}</p>}
       <div className="sm:col-span-2">

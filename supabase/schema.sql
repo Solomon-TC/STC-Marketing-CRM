@@ -180,3 +180,36 @@ create policy "authenticated users can do everything on contact_notes"
   to authenticated
   using (true)
   with check (true);
+
+-- 10. Websites Pipeline
+-- A second, independent pipeline with the exact same stages/structure as
+-- the Spotlights pipeline (deals) and pulling from the same contacts, but
+-- with its own data and no link to the Cards system. Tracks two dollar
+-- amounts instead of one: a one-time initial value and a monthly
+-- recurring value.
+create table website_deals (
+  id uuid primary key default gen_random_uuid(),
+  contact_id uuid references contacts(id) on delete cascade,
+  title text not null,
+  stage deal_stage not null default 'warm_lead',
+  initial_value numeric(12,2),
+  recurring_value numeric(12,2),
+  expected_close_date date,
+  notes text,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index website_deals_contact_idx on website_deals (contact_id);
+create index website_deals_stage_idx on website_deals (stage);
+
+create trigger website_deals_set_updated_at before update on website_deals
+  for each row execute function set_updated_at();
+
+alter table website_deals enable row level security;
+
+create policy "authenticated users can do everything on website_deals"
+  on website_deals for all
+  to authenticated
+  using (true)
+  with check (true);
