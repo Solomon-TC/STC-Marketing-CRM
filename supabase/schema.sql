@@ -2,31 +2,18 @@
 -- Run this in the Supabase SQL editor (Project > SQL Editor > New query) once.
 
 -- 1. Deal stage enum, matching your actual pipeline
+-- Already have this project running with the old stage list? Don't run this
+-- create statement (it'll fail with "already exists") -- instead run
+-- add_fulfilled_obligation_stage.sql, then migrate_removed_pipeline_stages.sql.
 create type deal_stage as enum (
-  'cold_lead',
   'warm_lead',
   'called_contacted',
   'requested_followup',
-  'follow_up',
+  'followed_up',
   'won',
-  'lost',
-  'invoice_sent',
-  'invoice_received',
-  'ad_made',
-  'ad_confirmed'
+  'fulfilled_obligation',
+  'lost'
 );
-
--- Stage names were reworked to match the real sales process. Renaming enum
--- values (rather than dropping/recreating the type or table) keeps every
--- existing deal row intact -- a deal with stage = 'follow_up' automatically
--- reads as 'followed_up' after this runs, no data rewrite needed.
---
--- Setting up fresh: running this whole file top-to-bottom handles both the
--- create and the rename, so you end up with the correct final names.
--- Already have this project running: run ONLY these two lines below in the
--- SQL Editor -- the create type above would fail with "already exists".
-alter type deal_stage rename value 'follow_up' to 'followed_up';
-alter type deal_stage rename value 'invoice_received' to 'payment_received';
 
 -- 2. Contacts
 -- Company is the sole identifier (no personal "name" field -- see
@@ -53,7 +40,7 @@ create table deals (
   id uuid primary key default gen_random_uuid(),
   contact_id uuid references contacts(id) on delete cascade,
   title text not null,
-  stage deal_stage not null default 'cold_lead',
+  stage deal_stage not null default 'warm_lead',
   value numeric(12,2),
   expected_close_date date,
   notes text,

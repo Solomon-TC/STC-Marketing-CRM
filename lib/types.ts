@@ -1,55 +1,37 @@
 export type DealStage =
-  | 'cold_lead'
   | 'warm_lead'
   | 'called_contacted'
   | 'requested_followup'
   | 'followed_up'
   | 'won'
-  | 'lost'
-  | 'invoice_sent'
-  | 'payment_received'
-  | 'ad_made'
-  | 'ad_confirmed';
+  | 'fulfilled_obligation'
+  | 'lost';
 
 export const DEAL_STAGES: { value: DealStage; label: string }[] = [
-  { value: 'cold_lead', label: 'Cold lead' },
   { value: 'warm_lead', label: 'Warm lead' },
   { value: 'called_contacted', label: 'Called/contacted' },
   { value: 'requested_followup', label: 'Requested follow up' },
   { value: 'followed_up', label: 'Followed up' },
   { value: 'won', label: 'Won' },
+  { value: 'fulfilled_obligation', label: 'Fulfilled Obligation' },
   { value: 'lost', label: 'Lost' },
-  { value: 'invoice_sent', label: 'Invoice sent' },
-  { value: 'payment_received', label: 'Payment received' },
-  { value: 'ad_made', label: 'Ad made' },
-  { value: 'ad_confirmed', label: 'Ad confirmed' },
 ];
 
 // The normal, guided path a deal follows. `lost` -> `called_contacted` is how
 // a lost deal gets reopened back into the live pipeline. Stages not listed as
-// a key have no further guided moves (e.g. ad_confirmed is a terminal state).
+// a key have no further guided moves (e.g. fulfilled_obligation is terminal).
 export const STAGE_TRANSITIONS: Record<DealStage, DealStage[]> = {
-  cold_lead: ['called_contacted'],
   warm_lead: ['called_contacted'],
   called_contacted: ['requested_followup', 'won', 'lost'],
   requested_followup: ['followed_up'],
   followed_up: ['won', 'lost'],
-  won: ['invoice_sent', 'lost'],
-  invoice_sent: ['payment_received', 'lost'],
-  payment_received: ['ad_made', 'lost'],
-  ad_made: ['ad_confirmed', 'lost'],
-  ad_confirmed: [],
+  won: ['fulfilled_obligation', 'lost'],
+  fulfilled_obligation: [],
   lost: ['called_contacted'],
 };
 
 // Stages counted as "won or better" for card-slot assignment eligibility.
-export const WON_OR_BETTER_STAGES: DealStage[] = [
-  'won',
-  'invoice_sent',
-  'payment_received',
-  'ad_made',
-  'ad_confirmed',
-];
+export const WON_OR_BETTER_STAGES: DealStage[] = ['won', 'fulfilled_obligation'];
 
 // Loose city match used to line up a contact's free-text location with a
 // card's city (e.g. contact location "Portland, OR" vs card city "Portland").

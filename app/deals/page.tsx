@@ -7,20 +7,16 @@ import { contactDisplayName, DEAL_STAGES, STAGE_TRANSITIONS, WON_OR_BETTER_STAGE
 import ContactCombobox from '@/components/ContactCombobox';
 import ContactNotesLog from '@/components/ContactNotesLog';
 
-// Roughly matches the whiteboard process map: blue/orange/pink for the lead
-// stages, purple for the follow-up stages, a green shade per money-in-motion
-// stage after "won", and red for lost.
+// Roughly matches the whiteboard process map: orange/pink for the lead
+// stages, purple for the follow-up stages, green for won and the deeper
+// green for fully fulfilled, and red for lost.
 const STAGE_COLORS: Record<DealStage, { header: string; text: string; count: string }> = {
-  cold_lead: { header: 'bg-blue-50 border-blue-200', text: 'text-blue-700', count: 'text-blue-400' },
   warm_lead: { header: 'bg-orange-50 border-orange-200', text: 'text-orange-700', count: 'text-orange-400' },
   called_contacted: { header: 'bg-pink-50 border-pink-200', text: 'text-pink-700', count: 'text-pink-400' },
   requested_followup: { header: 'bg-purple-50 border-purple-200', text: 'text-purple-700', count: 'text-purple-400' },
   followed_up: { header: 'bg-violet-50 border-violet-200', text: 'text-violet-700', count: 'text-violet-400' },
   won: { header: 'bg-green-50 border-green-200', text: 'text-green-700', count: 'text-green-400' },
-  invoice_sent: { header: 'bg-emerald-50 border-emerald-200', text: 'text-emerald-700', count: 'text-emerald-400' },
-  payment_received: { header: 'bg-teal-50 border-teal-200', text: 'text-teal-700', count: 'text-teal-400' },
-  ad_made: { header: 'bg-lime-50 border-lime-200', text: 'text-lime-700', count: 'text-lime-500' },
-  ad_confirmed: { header: 'bg-green-100 border-green-300', text: 'text-green-800', count: 'text-green-500' },
+  fulfilled_obligation: { header: 'bg-green-100 border-green-300', text: 'text-green-800', count: 'text-green-500' },
   lost: { header: 'bg-red-50 border-red-200', text: 'text-red-700', count: 'text-red-400' },
 };
 
@@ -61,6 +57,11 @@ export default function DealsPage() {
 
   async function moveStage(deal: Deal, stage: DealStage) {
     await supabase.from('deals').update({ stage }).eq('id', deal.id);
+    load();
+  }
+
+  async function deleteDeal(deal: Deal) {
+    await supabase.from('deals').delete().eq('id', deal.id);
     load();
   }
 
@@ -146,7 +147,7 @@ export default function DealsPage() {
               </div>
               <div className="space-y-2">
                 {stageDeals.map((deal) => (
-                  <DealCard key={deal.id} deal={deal} onMove={moveStage} />
+                  <DealCard key={deal.id} deal={deal} onMove={moveStage} onDelete={deleteDeal} />
                 ))}
               </div>
             </div>
@@ -157,12 +158,16 @@ export default function DealsPage() {
   );
 }
 
+const DELETE_OPTION = '__delete__';
+
 function DealCard({
   deal,
   onMove,
+  onDelete,
 }: {
   deal: Deal;
   onMove: (deal: Deal, stage: DealStage) => void;
+  onDelete: (deal: Deal) => void;
 }) {
   const [showManual, setShowManual] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
@@ -230,6 +235,12 @@ function DealCard({
           className="input mt-1 text-xs"
           value={deal.stage}
           onChange={(e) => {
+            if (e.target.value === DELETE_OPTION) {
+              if (confirm(`Delete "${deal.title}"? This can't be undone.`)) {
+                onDelete(deal);
+              }
+              return;
+            }
             onMove(deal, e.target.value as DealStage);
             setShowManual(false);
           }}
@@ -239,6 +250,7 @@ function DealCard({
               {s.label}
             </option>
           ))}
+          <option value={DELETE_OPTION}>Delete deal</option>
         </select>
       )}
     </div>
@@ -301,7 +313,7 @@ function NewDealForm({
   const [form, setForm] = useState({
     title: '',
     contact_id: initialContactId ?? '',
-    stage: 'cold_lead' as DealStage,
+    stage: 'warm_lead' as DealStage,
     value: '',
     expected_close_date: '',
   });

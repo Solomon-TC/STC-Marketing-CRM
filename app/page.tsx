@@ -26,7 +26,7 @@ export default async function DashboardPage() {
   });
 
   const totalOpenValue = (deals ?? [])
-    .filter((d) => !['won', 'lost'].includes(d.stage as DealStage))
+    .filter((d) => !['won', 'fulfilled_obligation', 'lost'].includes(d.stage as DealStage))
     .reduce((sum, d) => sum + (Number(d.value) || 0), 0);
 
   const wonCount = stageCounts['won'] ?? 0;
