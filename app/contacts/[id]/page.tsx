@@ -19,6 +19,7 @@ export default function ContactDetailPage() {
   const [saving, setSaving] = useState(false);
   const [newTask, setNewTask] = useState('');
   const [newTaskDue, setNewTaskDue] = useState('');
+  const [showPipelineChoice, setShowPipelineChoice] = useState(false);
 
   async function load() {
     const [{ data: c }, { data: d }, { data: t }] = await Promise.all([
@@ -146,11 +147,33 @@ export default function ContactDetailPage() {
       </div>
 
       <div className="card">
-        <div className="mb-3 flex items-center justify-between">
+        <div className="relative mb-3 flex items-center justify-between">
           <h2 className="text-sm font-medium">Deals</h2>
-          <Link href={`/deals?contactId=${contact.id}`} className="btn-secondary">
-            Add to pipeline
-          </Link>
+          <div>
+            <button
+              type="button"
+              onClick={() => setShowPipelineChoice((v) => !v)}
+              className="btn-secondary"
+            >
+              Add to pipeline
+            </button>
+            {showPipelineChoice && (
+              <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-black/10 bg-white py-1 shadow-md">
+                <Link
+                  href={`/deals?contactId=${contact.id}`}
+                  className="block px-3 py-1.5 text-sm text-ink/70 hover:bg-black/5"
+                >
+                  Spotlights Pipeline
+                </Link>
+                <Link
+                  href={`/website-deals?contactId=${contact.id}`}
+                  className="block px-3 py-1.5 text-sm text-ink/70 hover:bg-black/5"
+                >
+                  Websites Pipeline
+                </Link>
+              </div>
+            )}
+          </div>
         </div>
         {deals.length === 0 && <p className="text-sm text-ink/50">No deals yet for this contact.</p>}
         <div className="space-y-2">
