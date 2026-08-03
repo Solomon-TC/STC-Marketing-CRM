@@ -105,7 +105,7 @@ export interface Deal {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  contacts?: Pick<Contact, 'id' | 'company' | 'location' | 'industry'> | null;
+  contacts?: Pick<Contact, 'id' | 'company' | 'location' | 'industry' | 'phone'> | null;
 }
 
 export interface Task {
@@ -136,7 +136,7 @@ export interface WebsiteDeal {
   notes: string | null;
   created_at: string;
   updated_at: string;
-  contacts?: Pick<Contact, 'id' | 'company' | 'location' | 'industry'> | null;
+  contacts?: Pick<Contact, 'id' | 'company' | 'location' | 'industry' | 'phone'> | null;
 }
 
 // --- Contact notes log ---

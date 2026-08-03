@@ -26,7 +26,7 @@ export default function DealsPage() {
     const [{ data: d }, { data: c }] = await Promise.all([
       supabase
         .from('deals')
-        .select('*, contacts(id, company, location, industry)')
+        .select('*, contacts(id, company, location, industry, phone)')
         .order('created_at', { ascending: false }),
       supabase.from('contacts').select('*').order('company'),
     ]);
@@ -186,6 +186,7 @@ function DealCard({
     <div className="card">
       <p className="text-sm font-medium">{deal.title}</p>
       {deal.contacts && <p className="text-xs text-ink/50">{contactDisplayName(deal.contacts)}</p>}
+      {deal.contacts?.phone && <p className="text-xs text-ink/50">{deal.contacts.phone}</p>}
       {deal.value != null && (
         <p className="mt-1 text-xs text-ink/60">${Number(deal.value).toLocaleString()}</p>
       )}
