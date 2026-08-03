@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, DealStage, WebsiteDeal } from '@/lib/types';
-import { contactDisplayName, DEAL_STAGES, STAGE_COLORS, STAGE_TRANSITIONS } from '@/lib/types';
+import { contactDisplayName, WEBSITE_DEAL_STAGES, STAGE_COLORS, STAGE_TRANSITIONS } from '@/lib/types';
 import ContactCombobox from '@/components/ContactCombobox';
 import ContactNotesLog from '@/components/ContactNotesLog';
 
@@ -127,7 +127,7 @@ export default function WebsiteDealsPage() {
       </div>
 
       <div className="flex gap-4 overflow-x-auto pb-4">
-        {DEAL_STAGES.map((stage) => {
+        {WEBSITE_DEAL_STAGES.map((stage) => {
           const stageDeals = filteredDeals.filter((d) => d.stage === stage.value);
           const colors = STAGE_COLORS[stage.value];
           return (
@@ -238,7 +238,7 @@ function WebsiteDealCard({
         >
           <option value="">Move to...</option>
           {nextStages.map((stageValue) => {
-            const s = DEAL_STAGES.find((d) => d.value === stageValue)!;
+            const s = WEBSITE_DEAL_STAGES.find((d) => d.value === stageValue)!;
             return (
               <option key={s.value} value={s.value}>
                 {s.label}
@@ -271,7 +271,7 @@ function WebsiteDealCard({
             setShowManual(false);
           }}
         >
-          {DEAL_STAGES.map((s) => (
+          {WEBSITE_DEAL_STAGES.map((s) => (
             <option key={s.value} value={s.value}>
               {s.label}
             </option>
@@ -434,7 +434,7 @@ function NewWebsiteDealForm({
         value={form.stage}
         onChange={(e) => setForm({ ...form, stage: e.target.value as DealStage })}
       >
-        {DEAL_STAGES.map((s) => (
+        {WEBSITE_DEAL_STAGES.map((s) => (
           <option key={s.value} value={s.value}>
             {s.label}
           </option>

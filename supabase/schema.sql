@@ -5,7 +5,10 @@
 -- Already have this project running with the old stage list? Don't run this
 -- create statement (it'll fail with "already exists") -- instead run
 -- add_fulfilled_obligation_stage.sql, then migrate_removed_pipeline_stages.sql.
+-- cold_lead is only ever used by the Websites Pipeline (see WEBSITE_DEAL_STAGES
+-- in lib/types.ts) -- the Spotlights Pipeline's own stage list omits it.
 create type deal_stage as enum (
+  'cold_lead',
   'warm_lead',
   'called_contacted',
   'requested_followup',

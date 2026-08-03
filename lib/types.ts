@@ -1,4 +1,10 @@
+// 'cold_lead' is only offered in the Websites Pipeline (see
+// WEBSITE_DEAL_STAGES below) -- it's part of this shared union because both
+// pipelines' `stage` columns are backed by the same Postgres enum, but the
+// Spotlights Pipeline's own stage list (DEAL_STAGES) omits it, so a
+// Spotlights deal can never be set to it.
 export type DealStage =
+  | 'cold_lead'
   | 'warm_lead'
   | 'called_contacted'
   | 'requested_followup'
@@ -7,6 +13,7 @@ export type DealStage =
   | 'fulfilled_obligation'
   | 'lost';
 
+// The Spotlights Pipeline's stage list.
 export const DEAL_STAGES: { value: DealStage; label: string }[] = [
   { value: 'warm_lead', label: 'Warm lead' },
   { value: 'called_contacted', label: 'Called/contacted' },
@@ -17,10 +24,20 @@ export const DEAL_STAGES: { value: DealStage; label: string }[] = [
   { value: 'lost', label: 'Lost' },
 ];
 
+// The Websites Pipeline's stage list -- same as DEAL_STAGES, plus Cold lead
+// as the entry stage before Warm lead.
+export const WEBSITE_DEAL_STAGES: { value: DealStage; label: string }[] = [
+  { value: 'cold_lead', label: 'Cold lead' },
+  ...DEAL_STAGES,
+];
+
 // The normal, guided path a deal follows. `lost` -> `called_contacted` is how
 // a lost deal gets reopened back into the live pipeline. Stages not listed as
 // a key have no further guided moves (e.g. fulfilled_obligation is terminal).
+// cold_lead's transition is only ever exercised by the Websites Pipeline,
+// since Spotlights deals can never reach that stage.
 export const STAGE_TRANSITIONS: Record<DealStage, DealStage[]> = {
+  cold_lead: ['called_contacted'],
   warm_lead: ['called_contacted'],
   called_contacted: ['requested_followup', 'won', 'lost'],
   requested_followup: ['followed_up'],
@@ -39,6 +56,7 @@ export const WON_OR_BETTER_STAGES: DealStage[] = ['won', 'fulfilled_obligation']
 // follow-up stages, green for won and a deeper green for fully fulfilled,
 // red for lost.
 export const STAGE_COLORS: Record<DealStage, { header: string; text: string; count: string }> = {
+  cold_lead: { header: 'bg-blue-50 border-blue-200', text: 'text-blue-700', count: 'text-blue-400' },
   warm_lead: { header: 'bg-orange-50 border-orange-200', text: 'text-orange-700', count: 'text-orange-400' },
   called_contacted: { header: 'bg-pink-50 border-pink-200', text: 'text-pink-700', count: 'text-pink-400' },
   requested_followup: { header: 'bg-purple-50 border-purple-200', text: 'text-purple-700', count: 'text-purple-400' },
