@@ -49,6 +49,7 @@ create table deals (
   value numeric(12,2),
   expected_close_date date,
   won_at timestamptz,
+  urgent boolean not null default false,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
@@ -202,6 +203,7 @@ create table website_deals (
   recurring_value numeric(12,2),
   expected_close_date date,
   won_at timestamptz,
+  urgent boolean not null default false,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

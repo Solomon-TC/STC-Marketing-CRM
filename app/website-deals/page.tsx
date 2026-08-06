@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { Contact, DealStage, WebsiteDeal } from '@/lib/types';
-import { contactDisplayName, WEBSITE_DEAL_STAGES, STAGE_COLORS, STAGE_TRANSITIONS } from '@/lib/types';
+import { contactDisplayName, WEBSITE_DEAL_STAGES, STAGE_COLORS } from '@/lib/types';
 import ContactCombobox from '@/components/ContactCombobox';
 import ContactNotesLog from '@/components/ContactNotesLog';
 
@@ -173,14 +173,21 @@ function WebsiteDealCard({
   onDelete: (deal: WebsiteDeal) => void;
   onUpdated: () => void;
 }) {
-  const [showManual, setShowManual] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
-  const nextStages = STAGE_TRANSITIONS[deal.stage];
 
   return (
-    <div className="card">
-      <p className="text-sm font-medium">{deal.title}</p>
+    <div className="card relative">
+      {deal.urgent && (
+        <span
+          className="absolute right-2 top-2 text-2xl font-black leading-none text-red-600"
+          title="Urgent"
+          aria-label="Urgent"
+        >
+          !
+        </span>
+      )}
+      <p className={`text-sm font-medium ${deal.urgent ? 'pr-6' : ''}`}>{deal.title}</p>
       {deal.contacts && <p className="text-xs text-ink/50">{contactDisplayName(deal.contacts)}</p>}
       {deal.contacts?.phone && <p className="text-xs text-ink/50">{deal.contacts.phone}</p>}
       {deal.initial_value != null && (
@@ -229,57 +236,29 @@ function WebsiteDealCard({
         />
       )}
 
-      {nextStages.length > 0 && (
-        <select
-          className="input mt-2 text-xs"
-          value=""
-          onChange={(e) => {
-            if (e.target.value) onMove(deal, e.target.value as DealStage);
-          }}
-        >
-          <option value="">Move to...</option>
-          {nextStages.map((stageValue) => {
-            const s = WEBSITE_DEAL_STAGES.find((d) => d.value === stageValue)!;
-            return (
-              <option key={s.value} value={s.value}>
-                {s.label}
-              </option>
-            );
-          })}
-        </select>
-      )}
-
-      <button
-        type="button"
-        onClick={() => setShowManual((v) => !v)}
-        className="mt-2 block text-[11px] text-ink/40 hover:text-ink/60 hover:underline"
-      >
-        {showManual ? 'Cancel' : 'Correct stage manually'}
-      </button>
-
-      {showManual && (
-        <select
-          className="input mt-1 text-xs"
-          value={deal.stage}
-          onChange={(e) => {
-            if (e.target.value === DELETE_OPTION) {
-              if (confirm(`Delete "${deal.title}"? This can't be undone.`)) {
-                onDelete(deal);
-              }
-              return;
+      <select
+        className="input mt-2 text-xs"
+        value=""
+        onChange={(e) => {
+          const v = e.target.value;
+          if (!v) return;
+          if (v === DELETE_OPTION) {
+            if (confirm(`Delete "${deal.title}"? This can't be undone.`)) {
+              onDelete(deal);
             }
-            onMove(deal, e.target.value as DealStage);
-            setShowManual(false);
-          }}
-        >
-          {WEBSITE_DEAL_STAGES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-          <option value={DELETE_OPTION}>Delete deal</option>
-        </select>
-      )}
+            return;
+          }
+          onMove(deal, v as DealStage);
+        }}
+      >
+        <option value="">Move to...</option>
+        {WEBSITE_DEAL_STAGES.filter((s) => s.value !== deal.stage).map((s) => (
+          <option key={s.value} value={s.value}>
+            {s.label}
+          </option>
+        ))}
+        <option value={DELETE_OPTION}>Delete deal</option>
+      </select>
     </div>
   );
 }
@@ -302,6 +281,7 @@ function EditWebsiteDealForm({
     initial_value: deal.initial_value != null ? String(deal.initial_value) : '',
     recurring_value: deal.recurring_value != null ? String(deal.recurring_value) : '',
     expected_close_date: deal.expected_close_date ?? '',
+    urgent: deal.urgent,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -318,6 +298,7 @@ function EditWebsiteDealForm({
         initial_value: form.initial_value ? Number(form.initial_value) : null,
         recurring_value: form.recurring_value ? Number(form.recurring_value) : null,
         expected_close_date: form.expected_close_date || null,
+        urgent: form.urgent,
       })
       .eq('id', deal.id);
     setSaving(false);
@@ -362,6 +343,14 @@ function EditWebsiteDealForm({
         value={form.expected_close_date}
         onChange={(e) => setForm({ ...form, expected_close_date: e.target.value })}
       />
+      <label className="flex items-center gap-2 text-xs text-ink/70">
+        <input
+          type="checkbox"
+          checked={form.urgent}
+          onChange={(e) => setForm({ ...form, urgent: e.target.checked })}
+        />
+        Urgent
+      </label>
       {error && <p className="text-xs text-warn">{error}</p>}
       <div className="flex gap-2">
         <button type="submit" disabled={saving} className="btn-primary text-xs">
@@ -392,6 +381,7 @@ function NewWebsiteDealForm({
     initial_value: '',
     recurring_value: '',
     expected_close_date: '',
+    urgent: false,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -407,6 +397,7 @@ function NewWebsiteDealForm({
       initial_value: form.initial_value ? Number(form.initial_value) : null,
       recurring_value: form.recurring_value ? Number(form.recurring_value) : null,
       expected_close_date: form.expected_close_date || null,
+      urgent: form.urgent,
     });
     setSaving(false);
     if (error) {
@@ -461,6 +452,14 @@ function NewWebsiteDealForm({
         value={form.recurring_value}
         onChange={(e) => setForm({ ...form, recurring_value: e.target.value })}
       />
+      <label className="flex items-center gap-2 text-sm text-ink/70">
+        <input
+          type="checkbox"
+          checked={form.urgent}
+          onChange={(e) => setForm({ ...form, urgent: e.target.checked })}
+        />
+        Urgent
+      </label>
       {error && <p className="text-sm text-warn sm:col-span-2">{error}</p>}
       <div className="sm:col-span-2">
         <button type="submit" disabled={saving} className="btn-primary">

@@ -31,22 +31,6 @@ export const WEBSITE_DEAL_STAGES: { value: DealStage; label: string }[] = [
   ...DEAL_STAGES,
 ];
 
-// The normal, guided path a deal follows. `lost` -> `called_contacted` is how
-// a lost deal gets reopened back into the live pipeline. Stages not listed as
-// a key have no further guided moves (e.g. fulfilled_obligation is terminal).
-// cold_lead's transition is only ever exercised by the Websites Pipeline,
-// since Spotlights deals can never reach that stage.
-export const STAGE_TRANSITIONS: Record<DealStage, DealStage[]> = {
-  cold_lead: ['called_contacted'],
-  warm_lead: ['called_contacted'],
-  called_contacted: ['requested_followup', 'won', 'lost'],
-  requested_followup: ['followed_up'],
-  followed_up: ['won', 'lost'],
-  won: ['fulfilled_obligation', 'lost'],
-  fulfilled_obligation: [],
-  lost: ['called_contacted'],
-};
-
 // Stages counted as "won or better" for card-slot assignment eligibility.
 export const WON_OR_BETTER_STAGES: DealStage[] = ['won', 'fulfilled_obligation'];
 
@@ -102,6 +86,7 @@ export interface Deal {
   // for the Finances charts, since a stage change is the only reliable
   // revenue-recognition event this data model has.
   won_at: string | null;
+  urgent: boolean;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -133,6 +118,7 @@ export interface WebsiteDeal {
   recurring_value: number | null;
   expected_close_date: string | null;
   won_at: string | null;
+  urgent: boolean;
   notes: string | null;
   created_at: string;
   updated_at: string;
