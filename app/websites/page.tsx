@@ -57,21 +57,6 @@ export default function WebsitesPipelinePage() {
         />
       )}
 
-      <div className="card flex flex-wrap items-center gap-2">
-        <label className="text-sm text-ink/70" htmlFor="stuck-threshold">
-          Flag as stuck after
-        </label>
-        <input
-          id="stuck-threshold"
-          type="number"
-          min={1}
-          className="input w-20"
-          value={thresholdDays}
-          onChange={(e) => updateThreshold(Math.max(1, Number(e.target.value) || 1))}
-        />
-        <span className="text-sm text-ink/70">days in the same stage</span>
-      </div>
-
       <div className="flex gap-4 overflow-x-auto pb-4">
         {WEBSITE_CLIENT_STAGES.map((stage) => {
           const stageClients = clients.filter((c) => c.stage === stage.value);
@@ -92,6 +77,19 @@ export default function WebsitesPipelinePage() {
             </div>
           );
         })}
+      </div>
+
+      <div className="flex w-fit items-center gap-2 text-xs text-ink/50">
+        <label htmlFor="stuck-threshold">Flag as stuck after</label>
+        <input
+          id="stuck-threshold"
+          type="number"
+          min={1}
+          className="w-14 rounded-md border border-black/10 bg-white px-2 py-1 text-xs outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+          value={thresholdDays}
+          onChange={(e) => updateThreshold(Math.max(1, Number(e.target.value) || 1))}
+        />
+        <span>days in the same stage</span>
       </div>
     </div>
   );
