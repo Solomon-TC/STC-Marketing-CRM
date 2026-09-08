@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
-const links = [
+// Existing CRM pages your brother uses daily -- unchanged.
+const SALES_LINKS = [
   { href: '/', label: 'Dashboard' },
   { href: '/contacts', label: 'Contacts' },
   { href: '/deals', label: 'Spotlights Pipeline' },
@@ -16,11 +17,23 @@ const links = [
   { href: '/import', label: 'Import' },
 ];
 
+// The website-build tracking pages, shown only in "Websites" view.
+const WEBSITES_LINKS = [
+  { href: '/websites', label: 'Pipeline' },
+  { href: '/websites/dns-reference', label: 'DNS Reference' },
+];
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const supabase = createClient();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Derived from the URL rather than stored anywhere -- whatever page
+  // you're actually on decides which nav shows, so a refresh or a direct
+  // link always renders correctly with no flash of the wrong nav.
+  const mode: 'sales' | 'websites' = pathname.startsWith('/websites') ? 'websites' : 'sales';
+  const links = mode === 'websites' ? WEBSITES_LINKS : SALES_LINKS;
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -52,12 +65,20 @@ export default function Navbar() {
             })}
           </nav>
         </div>
-        <button
-          onClick={signOut}
-          className="hidden text-sm text-ink/60 hover:text-ink sm:block"
-        >
-          Sign out
-        </button>
+        <div className="hidden items-center gap-3 sm:flex">
+          <select
+            aria-label="Switch view"
+            className="input w-auto py-1 text-sm"
+            value={mode}
+            onChange={(e) => router.push(e.target.value === 'websites' ? '/websites' : '/')}
+          >
+            <option value="sales">Sales view</option>
+            <option value="websites">Websites view</option>
+          </select>
+          <button onClick={signOut} className="text-sm text-ink/60 hover:text-ink">
+            Sign out
+          </button>
+        </div>
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
@@ -92,6 +113,18 @@ export default function Navbar() {
               </Link>
             );
           })}
+          <select
+            aria-label="Switch view"
+            className="input mt-1"
+            value={mode}
+            onChange={(e) => {
+              setMenuOpen(false);
+              router.push(e.target.value === 'websites' ? '/websites' : '/');
+            }}
+          >
+            <option value="sales">Sales view</option>
+            <option value="websites">Websites view</option>
+          </select>
           <button
             onClick={signOut}
             className="mt-1 rounded-md px-3 py-2 text-left text-sm text-ink/60 hover:bg-black/5"

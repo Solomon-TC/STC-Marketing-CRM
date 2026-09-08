@@ -202,3 +202,136 @@ export interface Card {
   created_at: string;
   card_slots?: CardSlot[];
 }
+
+// --- Website client tracking ---
+// A separate system from the sales-side WebsiteDeal above: this tracks the
+// *build* process (intake through ongoing maintenance) for a client your
+// brother has already closed. Deliberately independent of contacts/deals --
+// see supabase/add_website_clients.sql for the full reasoning.
+
+export type WebsiteClientStage =
+  | 'new'
+  | 'intake'
+  | 'info_received'
+  | 'building'
+  | 'client_review'
+  | 'revisions'
+  | 'domain_setup'
+  | 'live'
+  | 'maintenance';
+
+export const WEBSITE_CLIENT_STAGES: { value: WebsiteClientStage; label: string }[] = [
+  { value: 'new', label: 'New' },
+  { value: 'intake', label: 'Intake' },
+  { value: 'info_received', label: 'Info Received' },
+  { value: 'building', label: 'Building' },
+  { value: 'client_review', label: 'Client Review' },
+  { value: 'revisions', label: 'Revisions' },
+  { value: 'domain_setup', label: 'Domain Setup' },
+  { value: 'live', label: 'Live' },
+  { value: 'maintenance', label: 'Maintenance' },
+];
+
+// Kanban column styling, same shape/spirit as STAGE_COLORS above. Neutral
+// for the not-yet-started stage, warmer tones through the build, green once
+// it's actually live, amber on Revisions since that's the one stage that
+// means "waiting on you to make a change" rather than "waiting on someone
+// else."
+export const WEBSITE_CLIENT_STAGE_COLORS: Record<
+  WebsiteClientStage,
+  { header: string; text: string; count: string }
+> = {
+  new: { header: 'bg-slate-50 border-slate-200', text: 'text-slate-700', count: 'text-slate-400' },
+  intake: { header: 'bg-orange-50 border-orange-200', text: 'text-orange-700', count: 'text-orange-400' },
+  info_received: { header: 'bg-pink-50 border-pink-200', text: 'text-pink-700', count: 'text-pink-400' },
+  building: { header: 'bg-purple-50 border-purple-200', text: 'text-purple-700', count: 'text-purple-400' },
+  client_review: { header: 'bg-violet-50 border-violet-200', text: 'text-violet-700', count: 'text-violet-400' },
+  revisions: { header: 'bg-amber-50 border-amber-200', text: 'text-amber-700', count: 'text-amber-400' },
+  domain_setup: { header: 'bg-blue-50 border-blue-200', text: 'text-blue-700', count: 'text-blue-400' },
+  live: { header: 'bg-green-50 border-green-200', text: 'text-green-700', count: 'text-green-400' },
+  maintenance: { header: 'bg-green-100 border-green-300', text: 'text-green-800', count: 'text-green-500' },
+};
+
+// Suggested tags for the multi-select in the New/Edit client forms -- the
+// scope_tags column itself is a plain text array, so a new tag typed in
+// doesn't require a code change or migration.
+export const SUGGESTED_WEBSITE_SCOPE_TAGS = ['Standard', 'Custom', 'Multi-location', 'Jobber integration'];
+
+export interface WebsiteClient {
+  id: string;
+  business_name: string;
+  contact_name: string | null;
+  email: string | null;
+  phone: string | null;
+  stage: WebsiteClientStage;
+  stage_changed_at: string;
+  date_closed: string | null;
+  service_area: string | null;
+  scope_tags: string[];
+  live_domain: string | null;
+  maintenance_status: 'active' | 'inactive';
+  notes: string | null;
+  intake_token: string;
+  intake_business_description: string | null;
+  intake_services: string | null;
+  intake_service_area_details: string | null;
+  intake_selling_points: string | null;
+  intake_inspiration_urls: string | null;
+  intake_other_notes: string | null;
+  intake_submitted_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WebsiteClientPhoto {
+  id: string;
+  website_client_id: string;
+  storage_path: string;
+  created_at: string;
+}
+
+// The editable master checklist. Each WebsiteClient gets its own copy of
+// the active templates (as WebsiteClientChecklistItem rows) at creation
+// time -- editing a template afterward never rewrites a client's existing
+// checklist history.
+export interface WebsiteChecklistTemplate {
+  id: string;
+  category: string;
+  label: string;
+  sort_order: number;
+  active: boolean;
+  created_at: string;
+}
+
+export interface WebsiteClientChecklistItem {
+  id: string;
+  website_client_id: string;
+  category: string;
+  label: string;
+  sort_order: number;
+  done: boolean;
+  done_at: string | null;
+  created_at: string;
+}
+
+export interface DnsReferenceGuide {
+  id: string;
+  registrar: string;
+  steps: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Singleton settings row (id is always 1).
+export interface WebsitePipelineSettings {
+  id: 1;
+  stuck_threshold_days: number;
+}
+
+// Whole days between an ISO timestamp and now -- used for "days in this
+// stage" on the Pipeline Dashboard.
+export function daysSince(iso: string): number {
+  const ms = Date.now() - new Date(iso).getTime();
+  return Math.max(0, Math.floor(ms / (1000 * 60 * 60 * 24)));
+}
