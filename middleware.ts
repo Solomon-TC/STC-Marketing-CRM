@@ -27,8 +27,12 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isLoginPage = request.nextUrl.pathname.startsWith('/login');
+  // The one client-facing exception: a client fills this out with no
+  // login at all, via a unique per-client link. Everything else in the
+  // app stays behind auth exactly as before.
+  const isIntakePage = request.nextUrl.pathname.startsWith('/intake');
 
-  if (!user && !isLoginPage) {
+  if (!user && !isLoginPage && !isIntakePage) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);

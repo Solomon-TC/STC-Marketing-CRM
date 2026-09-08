@@ -29,18 +29,36 @@ export default function WebsiteClientDetailPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   async function load() {
-    const [{ data: c }, { data: items }] = await Promise.all([
+    const [{ data: c }, { data: items }, { data: photos }] = await Promise.all([
       supabase.from('website_clients').select('*').eq('id', id).single(),
       supabase
         .from('website_client_checklist_items')
         .select('*')
         .eq('website_client_id', id)
         .order('sort_order', { ascending: true }),
+      supabase
+        .from('website_client_photos')
+        .select('storage_path')
+        .eq('website_client_id', id)
+        .order('created_at', { ascending: true }),
     ]);
     setClient(c);
     setChecklist(items ?? []);
+
+    if (photos && photos.length > 0) {
+      const signed = await Promise.all(
+        photos.map((p) =>
+          supabase.storage.from('website-client-uploads').createSignedUrl(p.storage_path, 3600)
+        )
+      );
+      setPhotoUrls(signed.map((s) => s.data?.signedUrl).filter((u): u is string => !!u));
+    } else {
+      setPhotoUrls([]);
+    }
     if (c) {
       setForm({
         business_name: c.business_name,
@@ -141,6 +159,18 @@ export default function WebsiteClientDetailPage() {
         setTimeout(() => setCopied(false), 2000);
       })
       .catch(() => setError('Could not copy to clipboard.'));
+  }
+
+  function copyIntakeLink() {
+    if (!client) return;
+    const url = `${window.location.origin}/intake/${client.intake_token}`;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+      })
+      .catch(() => setError('Could not copy the link.'));
   }
 
   if (!client || !form) {
@@ -287,11 +317,16 @@ export default function WebsiteClientDetailPage() {
       </div>
 
       <div className="card">
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
           <h2 className="text-sm font-medium">Intake</h2>
-          <button type="button" onClick={copySummary} className="btn-secondary text-xs">
-            {copied ? 'Copied!' : 'Copy formatted summary'}
-          </button>
+          <div className="flex gap-2">
+            <button type="button" onClick={copyIntakeLink} className="btn-secondary text-xs">
+              {linkCopied ? 'Copied!' : 'Copy intake link'}
+            </button>
+            <button type="button" onClick={copySummary} className="btn-secondary text-xs">
+              {copied ? 'Copied!' : 'Copy formatted summary'}
+            </button>
+          </div>
         </div>
         {client.intake_submitted_at ? (
           <div className="space-y-3 text-sm">
@@ -304,9 +339,21 @@ export default function WebsiteClientDetailPage() {
             <IntakeField label="Other notes from client" value={client.intake_other_notes} />
           </div>
         ) : (
-          <p className="text-sm text-ink/50">
-            Not yet submitted. The client intake form isn&apos;t built yet -- coming next.
-          </p>
+          <p className="text-sm text-ink/50">Not yet submitted. Send the client the intake link above.</p>
+        )}
+        {photoUrls.length > 0 && (
+          <div className="mt-4">
+            <p className="mb-2 text-xs font-medium text-ink/50">
+              {photoUrls.length} photo{photoUrls.length === 1 ? '' : 's'}
+            </p>
+            <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+              {photoUrls.map((url) => (
+                <a key={url} href={url} target="_blank" rel="noreferrer">
+                  <img src={url} alt="" className="aspect-square rounded-md border border-black/10 object-cover" />
+                </a>
+              ))}
+            </div>
+          </div>
         )}
       </div>
     </div>

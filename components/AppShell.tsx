@@ -5,7 +5,7 @@ import Navbar from './Navbar';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const hideNav = pathname === '/login';
+  const hideNav = pathname === '/login' || pathname.startsWith('/intake');
 
   return (
     <>
