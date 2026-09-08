@@ -377,6 +377,24 @@ create policy "authenticated users can do everything on dns_reference_guides"
 create policy "authenticated users can do everything on website_pipeline_settings"
   on website_pipeline_settings for all to authenticated using (true) with check (true);
 
+-- The Initial Build Prompt page: a singleton row (id is always 1) holding
+-- the text pasted into a new Claude Code session to start a client's build.
+create table website_build_prompt (
+  id smallint primary key default 1 check (id = 1),
+  content text not null default '',
+  updated_at timestamptz not null default now()
+);
+
+insert into website_build_prompt (id, content) values (1, '');
+
+create trigger website_build_prompt_set_updated_at before update on website_build_prompt
+  for each row execute function set_updated_at();
+
+alter table website_build_prompt enable row level security;
+
+create policy "authenticated users can do everything on website_build_prompt"
+  on website_build_prompt for all to authenticated using (true) with check (true);
+
 -- Private bucket for intake photo uploads. No insert/update/delete policy
 -- at all -- uploads go through the service-role key server-side (see
 -- lib/supabase/admin.ts), bypassing storage RLS entirely, so there's no

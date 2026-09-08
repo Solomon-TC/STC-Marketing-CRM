@@ -22,6 +22,7 @@ const WEBSITES_LINKS = [
   { href: '/websites', label: 'Pipeline' },
   { href: '/websites/checklist-templates', label: 'Checklist Templates' },
   { href: '/websites/dns-reference', label: 'DNS Reference' },
+  { href: '/websites/build-prompt', label: 'Initial Build Prompt' },
 ];
 
 export default function Navbar() {

@@ -331,6 +331,14 @@ export interface WebsitePipelineSettings {
   stuck_threshold_days: number;
 }
 
+// Singleton row (id is always 1) holding the text pasted into a new Claude
+// Code session to kick off a client's build.
+export interface WebsiteBuildPrompt {
+  id: 1;
+  content: string;
+  updated_at: string;
+}
+
 // Whole days between an ISO timestamp and now -- used for "days in this
 // stage" on the Pipeline Dashboard.
 export function daysSince(iso: string): number {
