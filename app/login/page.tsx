@@ -31,15 +31,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-paper px-4">
+    <div className="flex min-h-screen items-center justify-center bg-ink px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <h1 className="font-serif text-xl">STC Marketing CRM</h1>
-          <p className="mt-1 text-sm text-ink/60">Sign in to your account</p>
+          <h1 className="font-serif text-xl text-paper">
+            STC <span className="text-pineLight">Marketing</span> CRM
+          </h1>
+          <p className="mt-1 text-sm text-fog">Sign in to your account</p>
         </div>
         <form onSubmit={handleSubmit} className="card space-y-4">
           <div>
-            <label className="mb-1 block text-sm text-ink/70">Email</label>
+            <label className="mb-1 block text-sm text-fog">Email</label>
             <input
               type="email"
               required
@@ -50,7 +52,7 @@ export default function LoginPage() {
             />
           </div>
           <div>
-            <label className="mb-1 block text-sm text-ink/70">Password</label>
+            <label className="mb-1 block text-sm text-fog">Password</label>
             <input
               type="password"
               required
@@ -64,7 +66,7 @@ export default function LoginPage() {
             {loading ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
-        <p className="mt-4 text-center text-xs text-ink/50">
+        <p className="mt-4 text-center text-xs text-mist">
           Accounts are created in the Supabase dashboard under Authentication &gt; Users.
           Ask whoever set up the project to add you if you don&apos;t have a login yet.
         </p>

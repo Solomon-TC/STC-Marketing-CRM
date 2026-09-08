@@ -25,7 +25,7 @@ export default async function IntakePage({ params }: { params: { token: string }
   if (!client) {
     return (
       <div className="mx-auto max-w-lg py-16 text-center">
-        <p className="text-sm text-ink/60">
+        <p className="text-sm text-fog">
           This link isn&apos;t valid. Please check the link you were sent, or reach out to whoever sent it to you.
         </p>
       </div>
@@ -86,15 +86,15 @@ export default async function IntakePage({ params }: { params: { token: string }
     <div className="mx-auto max-w-2xl space-y-6 py-10">
       <div>
         <h1 className="font-serif text-2xl">Tell us about {client.business_name}</h1>
-        <p className="text-sm text-ink/60">
+        <p className="text-sm text-fog">
           A few questions to help us build your new website. Nothing here is set in stone -- share what you have,
           and we'll follow up if we need anything else.
         </p>
       </div>
 
       {client.intake_submitted_at && (
-        <div className="card border-accent/30 bg-accentSoft/40">
-          <p className="text-sm text-ink/80">
+        <div className="card border-pineLight/30 bg-pine/20/40">
+          <p className="text-sm text-fog">
             Thanks -- we received this on {formatNoteTimestamp(client.intake_submitted_at)}. You can update anything
             below and submit again if something changes.
           </p>
@@ -157,7 +157,7 @@ export default async function IntakePage({ params }: { params: { token: string }
         <Field label="Photos">
           <input name="photos" type="file" multiple accept="image/*" className="input" />
           {!!photoCount && (
-            <p className="mt-1 text-xs text-ink/50">
+            <p className="mt-1 text-xs text-mist">
               {photoCount} photo{photoCount === 1 ? '' : 's'} already received -- new ones you add here are on top
               of those, not instead of them.
             </p>
@@ -174,7 +174,7 @@ export default async function IntakePage({ params }: { params: { token: string }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="mb-1 block text-sm text-ink/70">{label}</label>
+      <label className="mb-1 block text-sm text-fog">{label}</label>
       {children}
     </div>
   );

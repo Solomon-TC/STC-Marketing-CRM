@@ -61,20 +61,20 @@ export default function ContactCombobox({
         }}
       />
       {open && (
-        <div className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-black/10 bg-white shadow-md">
+        <div className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md border border-white/10 bg-charcoal shadow-md">
           <button
             type="button"
-            className="block w-full px-3 py-2 text-left text-sm text-ink/50 hover:bg-black/5"
+            className="block w-full px-3 py-2 text-left text-sm text-mist hover:bg-white/5"
             onClick={() => select('')}
           >
             No linked contact
           </button>
-          {filtered.length === 0 && <p className="px-3 py-2 text-sm text-ink/40">No contacts match.</p>}
+          {filtered.length === 0 && <p className="px-3 py-2 text-sm text-mist">No contacts match.</p>}
           {filtered.map((c) => (
             <button
               key={c.id}
               type="button"
-              className="block w-full px-3 py-2 text-left text-sm hover:bg-black/5"
+              className="block w-full px-3 py-2 text-left text-sm hover:bg-white/5"
               onClick={() => select(c.id)}
             >
               {contactDisplayName(c)}

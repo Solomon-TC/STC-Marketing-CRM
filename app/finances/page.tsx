@@ -62,7 +62,7 @@ export default function FinancesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-2xl">Finances</h1>
-        <p className="text-sm text-ink/60">
+        <p className="text-sm text-fog">
           Revenue from Won-or-better deals across both pipelines, updating live.
         </p>
       </div>
@@ -70,9 +70,9 @@ export default function FinancesPage() {
       <div className="card">
         <div className="mb-1 flex items-baseline justify-between">
           <h2 className="text-sm font-medium">Static Revenue</h2>
-          <span className="text-xs text-ink/40">Spotlights Value + Websites Initial Value</span>
+          <span className="text-xs text-mist">Spotlights Value + Websites Initial Value</span>
         </div>
-        <p className="mb-4 text-3xl font-medium text-ink">
+        <p className="mb-4 text-3xl font-medium text-paper">
           {loading ? '...' : `$${staticTotal.toLocaleString()}`}
         </p>
         <RevenueChart points={staticPoints} color={STATIC_COLOR} />
@@ -81,9 +81,9 @@ export default function FinancesPage() {
       <div className="card">
         <div className="mb-1 flex items-baseline justify-between">
           <h2 className="text-sm font-medium">Recurring Revenue</h2>
-          <span className="text-xs text-ink/40">Websites Recurring Value, per month</span>
+          <span className="text-xs text-mist">Websites Recurring Value, per month</span>
         </div>
-        <p className="mb-4 text-3xl font-medium text-ink">
+        <p className="mb-4 text-3xl font-medium text-paper">
           {loading ? '...' : `$${recurringTotal.toLocaleString()}/mo`}
         </p>
         <RevenueChart points={recurringPoints} color={RECURRING_COLOR} />

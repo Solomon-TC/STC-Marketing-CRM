@@ -30,7 +30,7 @@ export default function DnsReferencePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-2xl">DNS / Registrar Reference</h1>
-          <p className="text-sm text-ink/60">Step-by-step notes for pointing a domain at a new site.</p>
+          <p className="text-sm text-fog">Step-by-step notes for pointing a domain at a new site.</p>
         </div>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>
           {showForm ? 'Close' : 'Add guide'}
@@ -48,7 +48,7 @@ export default function DnsReferencePage() {
       )}
 
       {guides.length === 0 && !showForm && (
-        <p className="text-sm text-ink/50">No guides yet. Add one to get started.</p>
+        <p className="text-sm text-mist">No guides yet. Add one to get started.</p>
       )}
 
       <div className="space-y-3">
@@ -124,7 +124,7 @@ function GuideCard({ guide, onChanged }: { guide: DnsReferenceGuide; onChanged: 
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-sm font-medium">{guide.registrar}</h2>
         <div className="flex gap-3 text-xs">
-          <button onClick={() => setEditing(true)} className="text-ink/50 hover:text-ink hover:underline">
+          <button onClick={() => setEditing(true)} className="text-mist hover:text-paper hover:underline">
             Edit
           </button>
           <button onClick={handleDelete} className="text-warn hover:underline">
@@ -132,7 +132,7 @@ function GuideCard({ guide, onChanged }: { guide: DnsReferenceGuide; onChanged: 
           </button>
         </div>
       </div>
-      <p className="whitespace-pre-wrap text-sm text-ink/80">{guide.steps}</p>
+      <p className="whitespace-pre-wrap text-sm text-fog">{guide.steps}</p>
     </div>
   );
 }

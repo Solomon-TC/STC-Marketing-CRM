@@ -48,7 +48,7 @@ export default function ChecklistTemplatesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-2xl">Checklist Templates</h1>
-          <p className="text-sm text-ink/60">
+          <p className="text-sm text-fog">
             The master checklist new clients get a copy of. Uncheck "Active" to retire an item without deleting
             it from clients who already have it.
           </p>
@@ -69,7 +69,7 @@ export default function ChecklistTemplatesPage() {
         />
       )}
 
-      {templates.length === 0 && !showForm && <p className="text-sm text-ink/50">No checklist items yet.</p>}
+      {templates.length === 0 && !showForm && <p className="text-sm text-mist">No checklist items yet.</p>}
 
       <div className="space-y-4">
         {Object.entries(byCategory).map(([category, items]) => (
@@ -121,7 +121,7 @@ function TemplateRow({
 
   if (editing) {
     return (
-      <form onSubmit={handleSave} className="flex flex-wrap items-center gap-2 rounded-md border border-black/10 p-2">
+      <form onSubmit={handleSave} className="flex flex-wrap items-center gap-2 rounded-md border border-white/10 p-2">
         <input
           className="input flex-1 text-sm"
           value={form.category}
@@ -150,10 +150,10 @@ function TemplateRow({
     <div className="flex items-center justify-between gap-2 text-sm">
       <label className="flex items-center gap-2">
         <input type="checkbox" checked={template.active} onChange={onToggleActive} />
-        <span className={template.active ? '' : 'text-ink/40 line-through'}>{template.label}</span>
+        <span className={template.active ? '' : 'text-mist line-through'}>{template.label}</span>
       </label>
       <div className="flex gap-3 text-xs">
-        <button onClick={() => setEditing(true)} className="text-ink/50 hover:text-ink hover:underline">
+        <button onClick={() => setEditing(true)} className="text-mist hover:text-paper hover:underline">
           Edit
         </button>
         <button onClick={handleDelete} className="text-warn hover:underline">
@@ -198,7 +198,7 @@ function NewTemplateForm({
   return (
     <form onSubmit={handleSubmit} className="card grid gap-3 sm:grid-cols-2">
       <div>
-        <label className="mb-1 block text-xs text-ink/50">Category</label>
+        <label className="mb-1 block text-xs text-mist">Category</label>
         <input
           className="input"
           list="existing-categories"
@@ -214,7 +214,7 @@ function NewTemplateForm({
         </datalist>
       </div>
       <div>
-        <label className="mb-1 block text-xs text-ink/50">Label</label>
+        <label className="mb-1 block text-xs text-mist">Label</label>
         <input
           className="input"
           placeholder="e.g. Photos received"

@@ -36,7 +36,7 @@ export default function RevenueChart({ points, color }: { points: RevenuePoint[]
 
   if (sorted.length === 0) {
     return (
-      <div className="flex h-[220px] items-center justify-center text-sm text-ink/40">
+      <div className="flex h-[220px] items-center justify-center text-sm text-mist">
         No revenue recorded yet.
       </div>
     );
@@ -113,10 +113,10 @@ export default function RevenueChart({ points, color }: { points: RevenuePoint[]
               y1={yFor(v)}
               y2={yFor(v)}
               stroke="currentColor"
-              className="text-ink/10"
+              className="text-white/10"
               strokeWidth={1}
             />
-            <text x={PAD_LEFT - 8} y={yFor(v) + 4} textAnchor="end" className="fill-ink/40 text-[10px]">
+            <text x={PAD_LEFT - 8} y={yFor(v) + 4} textAnchor="end" className="fill-mist text-[10px]">
               {formatMoney(v)}
             </text>
           </g>
@@ -132,10 +132,10 @@ export default function RevenueChart({ points, color }: { points: RevenuePoint[]
           strokeLinecap="round"
         />
 
-        <text x={PAD_LEFT} y={HEIGHT - 8} className="fill-ink/40 text-[10px]">
+        <text x={PAD_LEFT} y={HEIGHT - 8} className="fill-mist text-[10px]">
           {formatDate(cumulative[0].date)}
         </text>
-        <text x={WIDTH - PAD_RIGHT} y={HEIGHT - 8} textAnchor="end" className="fill-ink/40 text-[10px]">
+        <text x={WIDTH - PAD_RIGHT} y={HEIGHT - 8} textAnchor="end" className="fill-mist text-[10px]">
           Today
         </text>
 
@@ -147,7 +147,7 @@ export default function RevenueChart({ points, color }: { points: RevenuePoint[]
               y1={PAD_TOP}
               y2={HEIGHT - PAD_BOTTOM}
               stroke="currentColor"
-              className="text-ink/20"
+              className="text-white/15"
               strokeWidth={1}
             />
             <circle cx={hoverX!} cy={yFor(hoverPoint.value)} r={4} fill={color} stroke="white" strokeWidth={1.5} />
@@ -157,13 +157,13 @@ export default function RevenueChart({ points, color }: { points: RevenuePoint[]
 
       {hoverPoint && (
         <div
-          className="pointer-events-none absolute top-1 rounded-md border border-black/10 bg-white px-2 py-1 text-xs shadow-md"
+          className="pointer-events-none absolute top-1 rounded-md border border-white/10 bg-charcoal px-2 py-1 text-xs shadow-md"
           style={{
             left: `${Math.min(Math.max((hoverX! / WIDTH) * 100, 10), 82)}%`,
           }}
         >
-          <p className="font-medium text-ink">{formatMoney(hoverPoint.value)}</p>
-          <p className="text-ink/50">as of {formatDate(new Date(hoverPoint.t).toISOString())}</p>
+          <p className="font-medium text-paper">{formatMoney(hoverPoint.value)}</p>
+          <p className="text-mist">as of {formatDate(new Date(hoverPoint.t).toISOString())}</p>
         </div>
       )}
     </div>

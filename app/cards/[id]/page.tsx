@@ -104,7 +104,7 @@ export default function CardDetailPage() {
   }
 
   if (!card) {
-    return <p className="text-sm text-ink/50">Loading...</p>;
+    return <p className="text-sm text-mist">Loading...</p>;
   }
 
   const filledSlots = slots.filter((s) => s.status === 'filled');
@@ -123,11 +123,11 @@ export default function CardDetailPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <Link href="/cards" className="text-sm text-accent hover:underline">
+          <Link href="/cards" className="text-sm text-pineLight hover:underline">
             &larr; Back to cards
           </Link>
           <h1 className="mt-1 font-serif text-2xl">{card.city}</h1>
-          <p className="text-sm text-ink/60">{formatCardMonth(card.month)}</p>
+          <p className="text-sm text-fog">{formatCardMonth(card.month)}</p>
         </div>
         <div className="flex items-center gap-3">
           {card.status !== 'sent' && card.status !== 'archived' && (
@@ -136,7 +136,7 @@ export default function CardDetailPage() {
             </button>
           )}
           {card.status !== 'archived' && (
-            <button onClick={archiveCard} className="text-sm text-ink/50 hover:text-ink hover:underline">
+            <button onClick={archiveCard} className="text-sm text-mist hover:text-paper hover:underline">
               Archive
             </button>
           )}
@@ -145,7 +145,7 @@ export default function CardDetailPage() {
 
       <div className="card grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-sm text-ink/60">Status</label>
+          <label className="mb-1 block text-sm text-fog">Status</label>
           <select
             className="input"
             value={card.status}
@@ -159,7 +159,7 @@ export default function CardDetailPage() {
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-sm text-ink/60">Notes</label>
+          <label className="mb-1 block text-sm text-fog">Notes</label>
           <textarea
             className="input"
             rows={3}
@@ -174,21 +174,21 @@ export default function CardDetailPage() {
         <h2 className="mb-3 text-sm font-medium">Financial summary</h2>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
           <div>
-            <p className="text-xs text-ink/50">Revenue</p>
+            <p className="text-xs text-mist">Revenue</p>
             <p className="mt-1 text-xl font-medium">${revenue.toLocaleString()}</p>
           </div>
           <div>
-            <p className="text-xs text-ink/50">Cost</p>
+            <p className="text-xs text-mist">Cost</p>
             <p className="mt-1 text-xl font-medium">${BREAK_EVEN_COST.toLocaleString()}</p>
           </div>
           <div>
-            <p className="text-xs text-ink/50">Profit/loss</p>
-            <p className={`mt-1 text-xl font-medium ${profit >= 0 ? 'text-accent' : 'text-warn'}`}>
+            <p className="text-xs text-mist">Profit/loss</p>
+            <p className={`mt-1 text-xl font-medium ${profit >= 0 ? 'text-pineLight' : 'text-warn'}`}>
               {profit >= 0 ? '' : '-'}${Math.abs(profit).toLocaleString()}
             </p>
           </div>
           <div>
-            <p className="text-xs text-ink/50">Break-even covered</p>
+            <p className="text-xs text-mist">Break-even covered</p>
             <p className="mt-1 text-xl font-medium">{pctBreakEven}%</p>
           </div>
         </div>
@@ -206,7 +206,7 @@ export default function CardDetailPage() {
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b border-black/10 text-left text-ink/50">
+            <thead className="border-b border-white/10 text-left text-mist">
               <tr>
                 <th className="px-2 py-2 font-medium">Type</th>
                 <th className="px-2 py-2 font-medium">Size</th>
@@ -220,7 +220,7 @@ export default function CardDetailPage() {
             <tbody>
               {slots.length === 0 && (
                 <tr>
-                  <td className="px-2 py-4 text-ink/50" colSpan={7}>
+                  <td className="px-2 py-4 text-mist" colSpan={7}>
                     No slots yet. Add one above.
                   </td>
                 </tr>
@@ -276,10 +276,10 @@ function SlotRow({
   }
 
   return (
-    <tr className="border-b border-black/5 last:border-0">
+    <tr className="border-b border-white/5 last:border-0">
       <td className="px-2 py-2">{typeInfo.label}</td>
-      <td className="px-2 py-2 text-ink/60">{typeInfo.dimensions}</td>
-      <td className="px-2 py-2 text-ink/60">${slot.price}</td>
+      <td className="px-2 py-2 text-fog">{typeInfo.dimensions}</td>
+      <td className="px-2 py-2 text-fog">${slot.price}</td>
       <td className="px-2 py-2">
         <input
           className="input"
@@ -339,7 +339,7 @@ function AddSlotForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-md border border-black/10 p-3 sm:grid-cols-2">
+    <form onSubmit={handleSubmit} className="mb-4 grid gap-3 rounded-md border border-white/10 p-3 sm:grid-cols-2">
       <select className="input" value={slotType} onChange={(e) => setSlotType(e.target.value as SlotType)}>
         {SLOT_TYPES.map((t) => (
           <option key={t.value} value={t.value}>
@@ -359,7 +359,7 @@ function AddSlotForm({
       />
       <div>
         <ContactCombobox contacts={contacts} value={contactId} onChange={setContactId} />
-        <p className="mt-1 text-xs text-ink/40">
+        <p className="mt-1 text-xs text-mist">
           Only showing contacts in this city with a Won-or-better deal.
         </p>
       </div>

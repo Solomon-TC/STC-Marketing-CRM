@@ -35,30 +35,30 @@ export default function TasksPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-2xl">Tasks</h1>
-          <p className="text-sm text-ink/60">Across all contacts</p>
+          <p className="text-sm text-fog">Across all contacts</p>
         </div>
-        <label className="flex items-center gap-2 text-sm text-ink/60">
+        <label className="flex items-center gap-2 text-sm text-fog">
           <input type="checkbox" checked={showDone} onChange={(e) => setShowDone(e.target.checked)} />
           Show completed
         </label>
       </div>
 
-      <div className="card divide-y divide-black/5 p-0">
-        {visible.length === 0 && <p className="p-4 text-sm text-ink/50">Nothing here.</p>}
+      <div className="card divide-y divide-white/5 p-0">
+        {visible.length === 0 && <p className="p-4 text-sm text-mist">Nothing here.</p>}
         {visible.map((task: any) => (
           <label key={task.id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
             <span className="flex items-center gap-3">
               <input type="checkbox" checked={task.done} onChange={() => toggle(task)} />
-              <span className={task.done ? 'text-ink/40 line-through' : ''}>{task.title}</span>
+              <span className={task.done ? 'text-mist line-through' : ''}>{task.title}</span>
             </span>
-            <span className="text-ink/50">
+            <span className="text-mist">
               {task.contacts ? contactDisplayName(task.contacts) : 'No contact'}{' '}
               {task.due_date ? `· ${task.due_date}` : ''}
             </span>
           </label>
         ))}
       </div>
-      <p className="text-xs text-ink/40">
+      <p className="text-xs text-mist">
         Add tasks from a contact&apos;s page so they stay linked to the right person.
       </p>
     </div>

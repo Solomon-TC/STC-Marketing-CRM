@@ -111,7 +111,7 @@ export default function ContactsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-2xl">Contacts</h1>
-          <p className="text-sm text-ink/60">{contacts.length} total</p>
+          <p className="text-sm text-fog">{contacts.length} total</p>
         </div>
         <button className="btn-primary" onClick={() => setShowForm((v) => !v)}>
           {showForm ? 'Close' : 'Add contact'}
@@ -162,7 +162,7 @@ export default function ContactsPage() {
 
       <div className="card overflow-x-auto p-0">
         <table className="w-full text-sm">
-          <thead className="border-b border-black/10 text-left text-ink/50">
+          <thead className="border-b border-white/10 text-left text-mist">
             <tr>
               <th className="px-4 py-2 font-medium">Company</th>
               <th className="px-4 py-2 font-medium">Industry</th>
@@ -175,34 +175,34 @@ export default function ContactsPage() {
           <tbody>
             {loading && (
               <tr>
-                <td className="px-4 py-4 text-ink/50" colSpan={6}>
+                <td className="px-4 py-4 text-mist" colSpan={6}>
                   Loading...
                 </td>
               </tr>
             )}
             {!loading && filtered.length === 0 && (
               <tr>
-                <td className="px-4 py-4 text-ink/50" colSpan={6}>
+                <td className="px-4 py-4 text-mist" colSpan={6}>
                   No contacts match those filters.
                 </td>
               </tr>
             )}
             {filtered.map((c) => (
-              <tr key={c.id} className="border-b border-black/5 last:border-0 hover:bg-black/[0.02]">
+              <tr key={c.id} className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]">
                 <td className="px-4 py-2">
                   <Link
                     href={`/contacts/${c.id}`}
                     onClick={() => sessionStorage.setItem(SCROLL_KEY, String(window.scrollY))}
-                    className="text-accent hover:underline"
+                    className="text-pineLight hover:underline"
                   >
                     {contactDisplayName(c)}
                   </Link>
                 </td>
-                <td className="px-4 py-2 text-ink/70">{c.industry ?? '—'}</td>
-                <td className="px-4 py-2 text-ink/70">{c.location ?? '—'}</td>
-                <td className="px-4 py-2 text-ink/70">{c.email ?? '—'}</td>
-                <td className="px-4 py-2 text-ink/70">{c.phone ?? '—'}</td>
-                <td className="px-4 py-2 text-ink/70">
+                <td className="px-4 py-2 text-fog">{c.industry ?? '—'}</td>
+                <td className="px-4 py-2 text-fog">{c.location ?? '—'}</td>
+                <td className="px-4 py-2 text-fog">{c.email ?? '—'}</td>
+                <td className="px-4 py-2 text-fog">{c.phone ?? '—'}</td>
+                <td className="px-4 py-2 text-fog">
                   <NotesPreviewCell notes={notesByContact[c.id] ?? []} />
                 </td>
               </tr>
@@ -231,7 +231,7 @@ function NotesPreviewCell({ notes }: { notes: ContactNote[] }) {
   }
 
   if (notes.length === 0) {
-    return <span className="text-ink/40">—</span>;
+    return <span className="text-mist">—</span>;
   }
 
   return (
@@ -249,12 +249,12 @@ function NotesPreviewCell({ notes }: { notes: ContactNote[] }) {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             style={{ top: pos.top, left: pos.left }}
-            className="fixed z-50 max-h-56 w-72 overflow-y-auto rounded-md border border-black/10 bg-white p-2 text-xs shadow-lg"
+            className="fixed z-50 max-h-56 w-72 overflow-y-auto rounded-md border border-white/10 bg-charcoal p-2 text-xs shadow-lg"
           >
             {notes.map((n) => (
-              <div key={n.id} className="mb-2 border-b border-black/5 pb-2 last:mb-0 last:border-0 last:pb-0">
-                <p className="text-ink/40">{formatNoteTimestamp(n.created_at)}</p>
-                <p className="whitespace-pre-wrap text-ink/80">{n.body}</p>
+              <div key={n.id} className="mb-2 border-b border-white/5 pb-2 last:mb-0 last:border-0 last:pb-0">
+                <p className="text-mist">{formatNoteTimestamp(n.created_at)}</p>
+                <p className="whitespace-pre-wrap text-fog">{n.body}</p>
               </div>
             ))}
           </div>,

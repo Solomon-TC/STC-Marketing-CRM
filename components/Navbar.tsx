@@ -43,10 +43,12 @@ export default function Navbar() {
   }
 
   return (
-    <header className="border-b border-black/10 bg-white">
+    <header className="border-b border-white/10 bg-ink">
       <div className="mx-auto flex max-w-[1800px] items-center justify-between px-4 py-3 sm:px-6 lg:px-10">
         <div className="flex items-center gap-4">
-          <span className="font-serif text-base">STC Marketing CRM</span>
+          <span className="font-serif text-base text-paper">
+            STC <span className="text-pineLight">Marketing</span> CRM
+          </span>
           <nav className="hidden gap-0.5 sm:flex">
             {links.map((link) => {
               const active = pathname === link.href;
@@ -54,10 +56,10 @@ export default function Navbar() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`rounded-md px-2 py-1.5 text-sm transition ${
+                  className={`rounded-full px-3 py-1.5 text-sm transition ${
                     active
-                      ? 'bg-accentSoft text-accent font-medium'
-                      : 'text-ink/70 hover:bg-black/5'
+                      ? 'bg-pine/20 text-pineLight font-medium'
+                      : 'text-fog hover:bg-white/5'
                   }`}
                 >
                   {link.label}
@@ -76,7 +78,7 @@ export default function Navbar() {
             <option value="sales">Sales view</option>
             <option value="websites">Websites view</option>
           </select>
-          <button onClick={signOut} className="text-sm text-ink/60 hover:text-ink">
+          <button onClick={signOut} className="text-sm text-mist hover:text-paper">
             Sign out
           </button>
         </div>
@@ -84,7 +86,7 @@ export default function Navbar() {
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={menuOpen ? 'Close menu' : 'Open menu'}
           aria-expanded={menuOpen}
-          className="flex h-8 w-8 items-center justify-center rounded-md text-ink/70 hover:bg-black/5 sm:hidden"
+          className="flex h-8 w-8 items-center justify-center rounded-full text-fog hover:bg-white/5 sm:hidden"
         >
           {menuOpen ? (
             <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2">
@@ -98,7 +100,7 @@ export default function Navbar() {
         </button>
       </div>
       {menuOpen && (
-        <nav className="flex flex-col border-t border-black/10 px-4 py-2 sm:hidden">
+        <nav className="flex flex-col border-t border-white/10 px-4 py-2 sm:hidden">
           {links.map((link) => {
             const active = pathname === link.href;
             return (
@@ -106,8 +108,8 @@ export default function Navbar() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className={`rounded-md px-3 py-2 text-sm transition ${
-                  active ? 'bg-accentSoft text-accent font-medium' : 'text-ink/70 hover:bg-black/5'
+                className={`rounded-full px-3 py-2 text-sm transition ${
+                  active ? 'bg-pine/20 text-pineLight font-medium' : 'text-fog hover:bg-white/5'
                 }`}
               >
                 {link.label}
@@ -128,7 +130,7 @@ export default function Navbar() {
           </select>
           <button
             onClick={signOut}
-            className="mt-1 rounded-md px-3 py-2 text-left text-sm text-ink/60 hover:bg-black/5"
+            className="mt-1 rounded-full px-3 py-2 text-left text-sm text-mist hover:bg-white/5"
           >
             Sign out
           </button>

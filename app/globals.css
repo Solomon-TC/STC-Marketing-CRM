@@ -2,23 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dark, matching stcmarketingco.com's own theme (ink background, paper
+   text) rather than the light theme this app used to have. */
 body {
-  background-color: #F5F4F1;
-  color: #0B0B0C;
+  background-color: #0B0B0C;
+  color: #F5F4F1;
+}
+
+/* Native checkboxes default to a light OS-drawn box, which reads as a
+   glaring pale square against this dark theme -- accent-color themes the
+   whole control (box included) in every evergreen browser. */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: #6B8A72;
 }
 
 .input {
-  @apply w-full rounded-md border border-black/10 bg-white px-3 py-2 text-sm outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+  @apply w-full rounded-lg border border-white/15 bg-ink px-3 py-2 text-sm text-paper placeholder:text-mist/60 outline-none focus:border-pineLight focus:ring-1 focus:ring-pineLight;
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent/90 transition;
+  @apply inline-flex items-center justify-center rounded-full bg-pineLight px-4 py-2 text-sm font-medium text-ink transition hover:bg-pine disabled:opacity-60;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-md border border-black/10 bg-white px-4 py-2 text-sm font-medium text-ink hover:bg-black/5 transition;
+  @apply inline-flex items-center justify-center rounded-full border border-white/15 bg-transparent px-4 py-2 text-sm font-medium text-paper transition hover:border-pineLight/60 hover:bg-white/5;
 }
 
 .card {
-  @apply rounded-lg border border-black/10 bg-white p-4;
+  @apply rounded-2xl border border-white/10 bg-charcoal p-4;
 }

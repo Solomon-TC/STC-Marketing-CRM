@@ -39,7 +39,7 @@ export default function WebsitesPipelinePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-2xl">Website Build Pipeline</h1>
-          <p className="text-sm text-ink/60">
+          <p className="text-sm text-fog">
             {clients.length} {clients.length === 1 ? 'client' : 'clients'} in the build process
           </p>
         </div>
@@ -79,13 +79,13 @@ export default function WebsitesPipelinePage() {
         })}
       </div>
 
-      <div className="flex w-fit items-center gap-2 text-xs text-ink/50">
+      <div className="flex w-fit items-center gap-2 text-xs text-mist">
         <label htmlFor="stuck-threshold">Flag as stuck after</label>
         <input
           id="stuck-threshold"
           type="number"
           min={1}
-          className="w-14 rounded-md border border-black/10 bg-white px-2 py-1 text-xs outline-none focus:border-accent focus:ring-1 focus:ring-accent"
+          className="w-14 rounded-md border border-white/10 bg-charcoal px-2 py-1 text-xs outline-none focus:border-pineLight focus:ring-1 focus:ring-pineLight"
           value={thresholdDays}
           onChange={(e) => updateThreshold(Math.max(1, Number(e.target.value) || 1))}
         />
@@ -104,10 +104,10 @@ function ClientCard({ client, thresholdDays }: { client: WebsiteClient; threshol
   return (
     <Link
       href={`/websites/${client.id}`}
-      className={`card block hover:border-black/20 ${stuck ? 'border-warn/40' : ''}`}
+      className={`card block hover:border-white/15 ${stuck ? 'border-warn/40' : ''}`}
     >
       <p className="text-sm font-medium">{client.business_name}</p>
-      <p className="mt-1 text-xs text-ink/50">
+      <p className="mt-1 text-xs text-mist">
         {days} {days === 1 ? 'day' : 'days'} in this stage
       </p>
       {stuck && <p className="mt-1 text-xs font-medium text-warn">⚠ Stuck</p>}
@@ -203,7 +203,7 @@ function NewClientForm({ onCreated }: { onCreated: () => void }) {
         onChange={(e) => setForm({ ...form, phone: e.target.value })}
       />
       <div>
-        <label className="mb-1 block text-xs text-ink/50">Date closed</label>
+        <label className="mb-1 block text-xs text-mist">Date closed</label>
         <input
           className="input"
           type="date"

@@ -99,7 +99,7 @@ export default function ImportPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-2xl">Import contacts</h1>
-        <p className="text-sm text-ink/60">
+        <p className="text-sm text-fog">
           Upload a CSV export from your spreadsheet, map the columns, then import.
         </p>
       </div>
@@ -109,7 +109,7 @@ export default function ImportPage() {
       </div>
 
       {result && (
-        <p className="text-sm text-ink/70" role="status">
+        <p className="text-sm text-fog" role="status">
           {result}
         </p>
       )}
@@ -117,11 +117,11 @@ export default function ImportPage() {
       {headers.length > 0 && (
         <div className="card space-y-4">
           <h2 className="text-sm font-medium">Map your columns</h2>
-          <p className="text-xs text-ink/50">{rows.length} rows detected in the file.</p>
+          <p className="text-xs text-mist">{rows.length} rows detected in the file.</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {TARGET_FIELDS.map((field) => (
               <div key={field.key}>
-                <label className="mb-1 block text-sm text-ink/60">{field.label}</label>
+                <label className="mb-1 block text-sm text-fog">{field.label}</label>
                 <select
                   className="input"
                   value={mapping[field.key] ?? ''}

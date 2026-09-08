@@ -78,7 +78,7 @@ export default function WebsiteDealsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-2xl">Websites Pipeline</h1>
-          <p className="text-sm text-ink/60">
+          <p className="text-sm text-fog">
             {deals.length} {deals.length === 1 ? 'deal' : 'deals'} across your pipeline
           </p>
         </div>
@@ -180,7 +180,7 @@ function WebsiteDealCard({
     <div className="card relative">
       {deal.urgent && (
         <span
-          className="absolute right-2 top-2 text-2xl font-black leading-none text-red-600"
+          className="absolute right-2 top-2 text-2xl font-black leading-none text-red-500"
           title="Urgent"
           aria-label="Urgent"
         >
@@ -188,13 +188,13 @@ function WebsiteDealCard({
         </span>
       )}
       <p className={`text-sm font-medium ${deal.urgent ? 'pr-6' : ''}`}>{deal.title}</p>
-      {deal.contacts && <p className="text-xs text-ink/50">{contactDisplayName(deal.contacts)}</p>}
-      {deal.contacts?.phone && <p className="text-xs text-ink/50">{deal.contacts.phone}</p>}
+      {deal.contacts && <p className="text-xs text-mist">{contactDisplayName(deal.contacts)}</p>}
+      {deal.contacts?.phone && <p className="text-xs text-mist">{deal.contacts.phone}</p>}
       {deal.initial_value != null && (
-        <p className="mt-1 text-xs text-ink/60">Initial: ${Number(deal.initial_value).toLocaleString()}</p>
+        <p className="mt-1 text-xs text-fog">Initial: ${Number(deal.initial_value).toLocaleString()}</p>
       )}
       {deal.recurring_value != null && (
-        <p className="text-xs text-ink/60">
+        <p className="text-xs text-fog">
           Recurring: ${Number(deal.recurring_value).toLocaleString()}/mo
         </p>
       )}
@@ -204,12 +204,12 @@ function WebsiteDealCard({
           <button
             type="button"
             onClick={() => setShowNotes((v) => !v)}
-            className="text-[11px] text-ink/40 hover:text-ink/60 hover:underline"
+            className="text-[11px] text-mist hover:text-fog hover:underline"
           >
             {showNotes ? 'Hide notes' : 'Notes'}
           </button>
           {showNotes && (
-            <div className="mt-1 rounded-md border border-black/10 p-2">
+            <div className="mt-1 rounded-md border border-white/10 p-2">
               <ContactNotesLog contactId={deal.contacts.id} />
             </div>
           )}
@@ -219,7 +219,7 @@ function WebsiteDealCard({
       <button
         type="button"
         onClick={() => setShowEdit((v) => !v)}
-        className="mt-2 block text-[11px] text-ink/40 hover:text-ink/60 hover:underline"
+        className="mt-2 block text-[11px] text-mist hover:text-fog hover:underline"
       >
         {showEdit ? 'Cancel edit' : 'Edit deal'}
       </button>
@@ -310,7 +310,7 @@ function EditWebsiteDealForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-1 space-y-2 rounded-md border border-black/10 p-2">
+    <form onSubmit={handleSubmit} className="mt-1 space-y-2 rounded-md border border-white/10 p-2">
       <input
         className="input text-xs"
         placeholder="Deal title"
@@ -343,7 +343,7 @@ function EditWebsiteDealForm({
         value={form.expected_close_date}
         onChange={(e) => setForm({ ...form, expected_close_date: e.target.value })}
       />
-      <label className="flex items-center gap-2 text-xs text-ink/70">
+      <label className="flex items-center gap-2 text-xs text-fog">
         <input
           type="checkbox"
           checked={form.urgent}
@@ -452,7 +452,7 @@ function NewWebsiteDealForm({
         value={form.recurring_value}
         onChange={(e) => setForm({ ...form, recurring_value: e.target.value })}
       />
-      <label className="flex items-center gap-2 text-sm text-ink/70">
+      <label className="flex items-center gap-2 text-sm text-fog">
         <input
           type="checkbox"
           checked={form.urgent}

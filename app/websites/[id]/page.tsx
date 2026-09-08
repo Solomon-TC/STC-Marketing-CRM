@@ -174,13 +174,13 @@ export default function WebsiteClientDetailPage() {
   }
 
   if (!client || !form) {
-    return <p className="text-sm text-ink/50">Loading...</p>;
+    return <p className="text-sm text-mist">Loading...</p>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <button onClick={() => router.push('/websites')} className="text-sm text-accent hover:underline">
+        <button onClick={() => router.push('/websites')} className="text-sm text-pineLight hover:underline">
           &larr; Back to pipeline
         </button>
         <button onClick={handleDelete} className="text-sm text-warn hover:underline">
@@ -190,7 +190,7 @@ export default function WebsiteClientDetailPage() {
 
       <div>
         <h1 className="font-serif text-2xl">{client.business_name}</h1>
-        <p className="text-sm text-ink/60">
+        <p className="text-sm text-fog">
           Stage-changed {formatNoteTimestamp(client.stage_changed_at)} · Created{' '}
           {formatNoteTimestamp(client.created_at)}
         </p>
@@ -298,16 +298,16 @@ export default function WebsiteClientDetailPage() {
 
       <div className="card">
         <h2 className="mb-3 text-sm font-medium">Checklist</h2>
-        {checklist.length === 0 && <p className="text-sm text-ink/50">No checklist items on this client.</p>}
+        {checklist.length === 0 && <p className="text-sm text-mist">No checklist items on this client.</p>}
         <div className="space-y-4">
           {Object.entries(checklistByCategory).map(([category, items]) => (
             <div key={category}>
-              <h3 className="mb-1 text-xs font-medium uppercase tracking-wide text-ink/40">{category}</h3>
+              <h3 className="mb-1 text-xs font-medium uppercase tracking-wide text-mist">{category}</h3>
               <div className="space-y-1">
                 {items.map((item) => (
                   <label key={item.id} className="flex items-center gap-2 text-sm">
                     <input type="checkbox" checked={item.done} onChange={() => toggleChecklistItem(item)} />
-                    <span className={item.done ? 'text-ink/40 line-through' : ''}>{item.label}</span>
+                    <span className={item.done ? 'text-mist line-through' : ''}>{item.label}</span>
                   </label>
                 ))}
               </div>
@@ -330,7 +330,7 @@ export default function WebsiteClientDetailPage() {
         </div>
         {client.intake_submitted_at ? (
           <div className="space-y-3 text-sm">
-            <p className="text-xs text-ink/50">Submitted {formatNoteTimestamp(client.intake_submitted_at)}</p>
+            <p className="text-xs text-mist">Submitted {formatNoteTimestamp(client.intake_submitted_at)}</p>
             <IntakeField label="Business description" value={client.intake_business_description} />
             <IntakeField label="Services offered" value={client.intake_services} />
             <IntakeField label="Service area details" value={client.intake_service_area_details} />
@@ -339,17 +339,17 @@ export default function WebsiteClientDetailPage() {
             <IntakeField label="Other notes from client" value={client.intake_other_notes} />
           </div>
         ) : (
-          <p className="text-sm text-ink/50">Not yet submitted. Send the client the intake link above.</p>
+          <p className="text-sm text-mist">Not yet submitted. Send the client the intake link above.</p>
         )}
         {photoUrls.length > 0 && (
           <div className="mt-4">
-            <p className="mb-2 text-xs font-medium text-ink/50">
+            <p className="mb-2 text-xs font-medium text-mist">
               {photoUrls.length} photo{photoUrls.length === 1 ? '' : 's'}
             </p>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {photoUrls.map((url) => (
                 <a key={url} href={url} target="_blank" rel="noreferrer">
-                  <img src={url} alt="" className="aspect-square rounded-md border border-black/10 object-cover" />
+                  <img src={url} alt="" className="aspect-square rounded-md border border-white/10 object-cover" />
                 </a>
               ))}
             </div>
@@ -364,8 +364,8 @@ function IntakeField({ label, value }: { label: string; value: string | null }) 
   if (!value) return null;
   return (
     <div>
-      <p className="text-xs font-medium text-ink/50">{label}</p>
-      <p className="whitespace-pre-wrap text-ink/80">{value}</p>
+      <p className="text-xs font-medium text-mist">{label}</p>
+      <p className="whitespace-pre-wrap text-fog">{value}</p>
     </div>
   );
 }
@@ -381,7 +381,7 @@ function Field({
 }) {
   return (
     <div className={full ? 'sm:col-span-2' : ''}>
-      <label className="mb-1 block text-xs text-ink/50">{label}</label>
+      <label className="mb-1 block text-xs text-mist">{label}</label>
       {children}
     </div>
   );

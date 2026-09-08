@@ -38,16 +38,18 @@ export const WON_OR_BETTER_STAGES: DealStage[] = ['won', 'fulfilled_obligation']
 // Spotlights and Websites pipelines use this). Roughly matches the
 // whiteboard process map: orange/pink for the lead stages, purple for the
 // follow-up stages, green for won and a deeper green for fully fulfilled,
-// red for lost.
+// red for lost. Tuned for the dark (bg-ink) theme -- low-opacity tinted
+// fills with bright-enough text to read on near-black, rather than the
+// pale-50 light-mode tints these used to be.
 export const STAGE_COLORS: Record<DealStage, { header: string; text: string; count: string }> = {
-  cold_lead: { header: 'bg-blue-50 border-blue-200', text: 'text-blue-700', count: 'text-blue-400' },
-  warm_lead: { header: 'bg-orange-50 border-orange-200', text: 'text-orange-700', count: 'text-orange-400' },
-  called_contacted: { header: 'bg-pink-50 border-pink-200', text: 'text-pink-700', count: 'text-pink-400' },
-  requested_followup: { header: 'bg-purple-50 border-purple-200', text: 'text-purple-700', count: 'text-purple-400' },
-  followed_up: { header: 'bg-violet-50 border-violet-200', text: 'text-violet-700', count: 'text-violet-400' },
-  won: { header: 'bg-green-50 border-green-200', text: 'text-green-700', count: 'text-green-400' },
-  fulfilled_obligation: { header: 'bg-green-100 border-green-300', text: 'text-green-800', count: 'text-green-500' },
-  lost: { header: 'bg-red-50 border-red-200', text: 'text-red-700', count: 'text-red-400' },
+  cold_lead: { header: 'bg-blue-500/10 border-blue-500/25', text: 'text-blue-300', count: 'text-blue-300/60' },
+  warm_lead: { header: 'bg-orange-500/10 border-orange-500/25', text: 'text-orange-300', count: 'text-orange-300/60' },
+  called_contacted: { header: 'bg-pink-500/10 border-pink-500/25', text: 'text-pink-300', count: 'text-pink-300/60' },
+  requested_followup: { header: 'bg-purple-500/10 border-purple-500/25', text: 'text-purple-300', count: 'text-purple-300/60' },
+  followed_up: { header: 'bg-violet-500/10 border-violet-500/25', text: 'text-violet-300', count: 'text-violet-300/60' },
+  won: { header: 'bg-green-500/10 border-green-500/25', text: 'text-green-300', count: 'text-green-300/60' },
+  fulfilled_obligation: { header: 'bg-green-500/20 border-green-500/35', text: 'text-green-200', count: 'text-green-200/70' },
+  lost: { header: 'bg-red-500/10 border-red-500/25', text: 'text-red-300', count: 'text-red-300/60' },
 };
 
 // Loose city match used to line up a contact's free-text location with a
@@ -241,15 +243,15 @@ export const WEBSITE_CLIENT_STAGE_COLORS: Record<
   WebsiteClientStage,
   { header: string; text: string; count: string }
 > = {
-  new: { header: 'bg-slate-50 border-slate-200', text: 'text-slate-700', count: 'text-slate-400' },
-  intake: { header: 'bg-orange-50 border-orange-200', text: 'text-orange-700', count: 'text-orange-400' },
-  info_received: { header: 'bg-pink-50 border-pink-200', text: 'text-pink-700', count: 'text-pink-400' },
-  building: { header: 'bg-purple-50 border-purple-200', text: 'text-purple-700', count: 'text-purple-400' },
-  client_review: { header: 'bg-violet-50 border-violet-200', text: 'text-violet-700', count: 'text-violet-400' },
-  revisions: { header: 'bg-amber-50 border-amber-200', text: 'text-amber-700', count: 'text-amber-400' },
-  domain_setup: { header: 'bg-blue-50 border-blue-200', text: 'text-blue-700', count: 'text-blue-400' },
-  live: { header: 'bg-green-50 border-green-200', text: 'text-green-700', count: 'text-green-400' },
-  maintenance: { header: 'bg-green-100 border-green-300', text: 'text-green-800', count: 'text-green-500' },
+  new: { header: 'bg-slate-500/10 border-slate-500/25', text: 'text-slate-300', count: 'text-slate-300/60' },
+  intake: { header: 'bg-orange-500/10 border-orange-500/25', text: 'text-orange-300', count: 'text-orange-300/60' },
+  info_received: { header: 'bg-pink-500/10 border-pink-500/25', text: 'text-pink-300', count: 'text-pink-300/60' },
+  building: { header: 'bg-purple-500/10 border-purple-500/25', text: 'text-purple-300', count: 'text-purple-300/60' },
+  client_review: { header: 'bg-violet-500/10 border-violet-500/25', text: 'text-violet-300', count: 'text-violet-300/60' },
+  revisions: { header: 'bg-amber-500/10 border-amber-500/25', text: 'text-amber-300', count: 'text-amber-300/60' },
+  domain_setup: { header: 'bg-blue-500/10 border-blue-500/25', text: 'text-blue-300', count: 'text-blue-300/60' },
+  live: { header: 'bg-green-500/10 border-green-500/25', text: 'text-green-300', count: 'text-green-300/60' },
+  maintenance: { header: 'bg-green-500/20 border-green-500/35', text: 'text-green-200', count: 'text-green-200/70' },
 };
 
 // Suggested tags for the multi-select in the New/Edit client forms -- the

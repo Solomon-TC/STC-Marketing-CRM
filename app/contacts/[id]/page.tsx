@@ -80,14 +80,14 @@ export default function ContactDetailPage() {
   }
 
   if (!contact) {
-    return <p className="text-sm text-ink/50">Loading...</p>;
+    return <p className="text-sm text-mist">Loading...</p>;
   }
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <button onClick={() => router.back()} className="text-sm text-accent hover:underline">
+          <button onClick={() => router.back()} className="text-sm text-pineLight hover:underline">
             &larr; Back to contacts
           </button>
           <h1 className="mt-1 font-serif text-2xl">{contactDisplayName(contact)}</h1>
@@ -158,16 +158,16 @@ export default function ContactDetailPage() {
               Add to pipeline
             </button>
             {showPipelineChoice && (
-              <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-black/10 bg-white py-1 shadow-md">
+              <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-white/10 bg-charcoal py-1 shadow-md">
                 <Link
                   href={`/deals?contactId=${contact.id}`}
-                  className="block px-3 py-1.5 text-sm text-ink/70 hover:bg-black/5"
+                  className="block px-3 py-1.5 text-sm text-fog hover:bg-white/5"
                 >
                   Spotlights Pipeline
                 </Link>
                 <Link
                   href={`/website-deals?contactId=${contact.id}`}
-                  className="block px-3 py-1.5 text-sm text-ink/70 hover:bg-black/5"
+                  className="block px-3 py-1.5 text-sm text-fog hover:bg-white/5"
                 >
                   Websites Pipeline
                 </Link>
@@ -175,19 +175,19 @@ export default function ContactDetailPage() {
             )}
           </div>
         </div>
-        {deals.length === 0 && <p className="text-sm text-ink/50">No deals yet for this contact.</p>}
+        {deals.length === 0 && <p className="text-sm text-mist">No deals yet for this contact.</p>}
         <div className="space-y-2">
           {deals.map((d) => (
             <div key={d.id} className="flex items-center justify-between text-sm">
               <span>{d.title}</span>
-              <span className="text-ink/50">
+              <span className="text-mist">
                 {DEAL_STAGES.find((s) => s.value === d.stage)?.label}
                 {d.value ? ` · $${Number(d.value).toLocaleString()}` : ''}
               </span>
             </div>
           ))}
         </div>
-        <Link href="/deals" className="mt-3 inline-block text-sm text-accent hover:underline">
+        <Link href="/deals" className="mt-3 inline-block text-sm text-pineLight hover:underline">
           Manage deals in pipeline view
         </Link>
       </div>
@@ -198,11 +198,11 @@ export default function ContactDetailPage() {
           {tasks.map((t) => (
             <label key={t.id} className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={t.done} onChange={() => toggleTask(t)} />
-              <span className={t.done ? 'text-ink/40 line-through' : ''}>{t.title}</span>
-              {t.due_date && <span className="text-ink/40">({t.due_date})</span>}
+              <span className={t.done ? 'text-mist line-through' : ''}>{t.title}</span>
+              {t.due_date && <span className="text-mist">({t.due_date})</span>}
             </label>
           ))}
-          {tasks.length === 0 && <p className="text-sm text-ink/50">No tasks yet.</p>}
+          {tasks.length === 0 && <p className="text-sm text-mist">No tasks yet.</p>}
         </div>
         <form onSubmit={addTask} className="flex flex-wrap gap-2">
           <input
@@ -237,7 +237,7 @@ function Field({
 }) {
   return (
     <div className={full ? 'sm:col-span-2' : ''}>
-      <label className="mb-1 block text-sm text-ink/60">{label}</label>
+      <label className="mb-1 block text-sm text-fog">{label}</label>
       {children}
     </div>
   );

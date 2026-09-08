@@ -7,10 +7,10 @@ import type { Card, CardStatus } from '@/lib/types';
 import { BREAK_EVEN_COST, formatCardMonth } from '@/lib/types';
 
 const STATUS_BADGES: Record<CardStatus, string> = {
-  filling: 'bg-orange-50 text-orange-700',
-  ready: 'bg-green-50 text-green-700',
-  sent: 'bg-blue-50 text-blue-700',
-  archived: 'bg-black/5 text-ink/50',
+  filling: 'bg-orange-500/10 text-orange-300',
+  ready: 'bg-green-500/10 text-green-300',
+  sent: 'bg-blue-500/10 text-blue-300',
+  archived: 'bg-white/5 text-mist',
 };
 
 const STATUS_LABELS: Record<CardStatus, string> = {
@@ -63,7 +63,7 @@ export default function CardsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-serif text-2xl">Cards</h1>
-          <p className="text-sm text-ink/60">
+          <p className="text-sm text-fog">
             {cards.length} {cards.length === 1 ? 'card' : 'cards'} total
           </p>
         </div>
@@ -85,7 +85,7 @@ export default function CardsPage() {
         <button
           onClick={() => setView('active')}
           className={`rounded-md px-3 py-1.5 text-sm transition ${
-            view === 'active' ? 'bg-accentSoft font-medium text-accent' : 'text-ink/60 hover:bg-black/5'
+            view === 'active' ? 'bg-pine/20 font-medium text-pineLight' : 'text-fog hover:bg-white/5'
           }`}
         >
           Active Cards
@@ -93,17 +93,17 @@ export default function CardsPage() {
         <button
           onClick={() => setView('past')}
           className={`rounded-md px-3 py-1.5 text-sm transition ${
-            view === 'past' ? 'bg-accentSoft font-medium text-accent' : 'text-ink/60 hover:bg-black/5'
+            view === 'past' ? 'bg-pine/20 font-medium text-pineLight' : 'text-fog hover:bg-white/5'
           }`}
         >
           Past Cards
         </button>
       </div>
 
-      {loading && <p className="text-sm text-ink/50">Loading...</p>}
+      {loading && <p className="text-sm text-mist">Loading...</p>}
 
       {!loading && visible.length === 0 && (
-        <p className="text-sm text-ink/50">
+        <p className="text-sm text-mist">
           {view === 'active' ? 'No active cards yet.' : 'No past cards yet.'}
         </p>
       )}
@@ -130,7 +130,7 @@ function ActiveCardTile({ card }: { card: Card }) {
       <div className="flex items-start justify-between">
         <div>
           <p className="font-serif text-lg">{card.city}</p>
-          <p className="text-xs text-ink/50">{formatCardMonth(card.month)}</p>
+          <p className="text-xs text-mist">{formatCardMonth(card.month)}</p>
         </div>
         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGES[card.status]}`}>
           {STATUS_LABELS[card.status]}
@@ -138,20 +138,20 @@ function ActiveCardTile({ card }: { card: Card }) {
       </div>
 
       <div>
-        <div className="h-2 rounded-full bg-black/5">
-          <div className="h-2 rounded-full bg-accent" style={{ width: `${pct}%` }} />
+        <div className="h-2 rounded-full bg-white/5">
+          <div className="h-2 rounded-full bg-pineLight" style={{ width: `${pct}%` }} />
         </div>
-        <p className="mt-1 text-xs text-ink/50">
+        <p className="mt-1 text-xs text-mist">
           {filledCount}/{totalSlots} slots filled
         </p>
       </div>
 
-      <div className="text-xs text-ink/60">
+      <div className="text-xs text-fog">
         <p>
           Revenue: ${revenue.toLocaleString()}{' '}
-          <span className="text-ink/40">/ ${BREAK_EVEN_COST.toLocaleString()} break-even</span>
+          <span className="text-mist">/ ${BREAK_EVEN_COST.toLocaleString()} break-even</span>
         </p>
-        <p className={profit >= 0 ? 'text-accent' : 'text-warn'}>
+        <p className={profit >= 0 ? 'text-pineLight' : 'text-warn'}>
           Projected profit: {profit >= 0 ? '' : '-'}${Math.abs(profit).toLocaleString()}
         </p>
       </div>
@@ -174,15 +174,15 @@ function PastCardTile({ card }: { card: Card }) {
           {STATUS_LABELS[card.status]}
         </span>
       </div>
-      <p className="text-xs text-ink/50">{formatCardMonth(card.month)}</p>
-      <p className="text-sm text-ink/70">Final revenue: ${revenue.toLocaleString()}</p>
-      <p className={`text-sm ${profit >= 0 ? 'text-accent' : 'text-warn'}`}>
+      <p className="text-xs text-mist">{formatCardMonth(card.month)}</p>
+      <p className="text-sm text-fog">Final revenue: ${revenue.toLocaleString()}</p>
+      <p className={`text-sm ${profit >= 0 ? 'text-pineLight' : 'text-warn'}`}>
         Profit: {profit >= 0 ? '' : '-'}${Math.abs(profit).toLocaleString()}
       </p>
-      <p className="text-xs text-ink/50">
+      <p className="text-xs text-mist">
         {filledCount} {filledCount === 1 ? 'business' : 'businesses'}
       </p>
-      <Link href={`/cards/${card.id}`} className="mt-2 inline-block text-sm text-accent hover:underline">
+      <Link href={`/cards/${card.id}`} className="mt-2 inline-block text-sm text-pineLight hover:underline">
         View card
       </Link>
     </div>

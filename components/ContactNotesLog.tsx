@@ -68,14 +68,14 @@ export default function ContactNotesLog({ contactId }: { contactId: string }) {
         </button>
       </form>
 
-      {notes === null && <p className="text-sm text-ink/50">Loading notes...</p>}
-      {notes && notes.length === 0 && <p className="text-sm text-ink/50">No notes yet.</p>}
+      {notes === null && <p className="text-sm text-mist">Loading notes...</p>}
+      {notes && notes.length === 0 && <p className="text-sm text-mist">No notes yet.</p>}
 
       {notes && notes.length > 0 && (
         <div className="max-h-72 space-y-3 overflow-y-auto">
           {notes.map((n) => (
-            <div key={n.id} className="border-b border-black/5 pb-2 last:border-0">
-              <div className="mb-1 flex items-center justify-between text-xs text-ink/40">
+            <div key={n.id} className="border-b border-white/5 pb-2 last:border-0">
+              <div className="mb-1 flex items-center justify-between text-xs text-mist">
                 <span>{formatNoteTimestamp(n.created_at)}</span>
                 <span className="flex gap-2">
                   {editingId === n.id ? (
@@ -118,7 +118,7 @@ export default function ContactNotesLog({ contactId }: { contactId: string }) {
                   onChange={(e) => setEditText(e.target.value)}
                 />
               ) : (
-                <p className="whitespace-pre-wrap text-sm text-ink/80">{n.body}</p>
+                <p className="whitespace-pre-wrap text-sm text-fog">{n.body}</p>
               )}
             </div>
           ))}
