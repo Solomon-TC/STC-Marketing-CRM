@@ -20,6 +20,7 @@ const SALES_LINKS = [
 // The website-build tracking pages, shown only in "Websites" view.
 const WEBSITES_LINKS = [
   { href: '/websites', label: 'Pipeline' },
+  { href: '/websites/checklist-templates', label: 'Checklist Templates' },
   { href: '/websites/dns-reference', label: 'DNS Reference' },
 ];
 
