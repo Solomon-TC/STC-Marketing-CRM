@@ -395,6 +395,21 @@ alter table website_build_prompt enable row level security;
 create policy "authenticated users can do everything on website_build_prompt"
   on website_build_prompt for all to authenticated using (true) with check (true);
 
+-- The Websites view's To-Do page. Separate from `tasks` above (those are
+-- tied to contacts and belong to the Sales view).
+create table website_todos (
+  id uuid primary key default gen_random_uuid(),
+  title text not null,
+  done boolean not null default false,
+  done_at timestamptz,
+  created_at timestamptz not null default now()
+);
+
+alter table website_todos enable row level security;
+
+create policy "authenticated users can do everything on website_todos"
+  on website_todos for all to authenticated using (true) with check (true);
+
 -- Private bucket for intake photo uploads. No insert/update/delete policy
 -- at all -- uploads go through the service-role key server-side (see
 -- lib/supabase/admin.ts), bypassing storage RLS entirely, so there's no

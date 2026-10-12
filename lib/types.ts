@@ -339,6 +339,16 @@ export interface WebsiteBuildPrompt {
   updated_at: string;
 }
 
+// A plain to-do item on the Websites view's To-Do page -- separate from the
+// sales-side Task above, which is tied to a contact.
+export interface WebsiteTodo {
+  id: string;
+  title: string;
+  done: boolean;
+  done_at: string | null;
+  created_at: string;
+}
+
 // Whole days between an ISO timestamp and now -- used for "days in this
 // stage" on the Pipeline Dashboard.
 export function daysSince(iso: string): number {
