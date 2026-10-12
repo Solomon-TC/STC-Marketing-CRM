@@ -19,6 +19,8 @@ export default function WebsiteDealsPage() {
   const [initialContactId, setInitialContactId] = useState<string | undefined>(undefined);
   const [industryFilter, setIndustryFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<DealStage | null>(null);
 
   async function load() {
     const [{ data: d }, { data: c }] = await Promise.all([
@@ -51,6 +53,19 @@ export default function WebsiteDealsPage() {
     if (stage === 'won') patch.won_at = new Date().toISOString();
     await supabase.from('website_deals').update(patch).eq('id', deal.id);
     load();
+  }
+
+  // Drag-and-drop is a second way to do exactly what the card's "Move to..."
+  // dropdown does -- it goes through the same moveStage, so won_at and
+  // everything else behave identically. The local update first just keeps
+  // the card from snapping back while the save round-trips.
+  async function dropOnStage(stage: DealStage) {
+    const deal = deals.find((d) => d.id === draggingId);
+    setDraggingId(null);
+    setDragOverStage(null);
+    if (!deal || deal.stage === stage) return;
+    setDeals((prev) => prev.map((d) => (d.id === deal.id ? { ...d, stage } : d)));
+    await moveStage(deal, stage);
   }
 
   async function deleteDeal(deal: WebsiteDeal) {
@@ -131,14 +146,32 @@ export default function WebsiteDealsPage() {
           const stageDeals = filteredDeals.filter((d) => d.stage === stage.value);
           const colors = STAGE_COLORS[stage.value];
           return (
-            <div key={stage.value} className="w-64 shrink-0">
+            <div
+              key={stage.value}
+              className={`w-64 shrink-0 rounded-md transition ${
+                draggingId && dragOverStage === stage.value ? 'bg-white/5 ring-1 ring-pineLight/50' : ''
+              }`}
+              onDragOver={(e) => {
+                if (!draggingId) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dragOverStage !== stage.value) setDragOverStage(stage.value);
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOverStage(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                dropOnStage(stage.value);
+              }}
+            >
               <div
                 className={`mb-2 flex items-center justify-between rounded-md border px-2 py-1.5 ${colors.header}`}
               >
                 <h3 className={`text-sm font-medium ${colors.text}`}>{stage.label}</h3>
                 <span className={`text-xs ${colors.count}`}>{stageDeals.length}</span>
               </div>
-              <div className="space-y-2">
+              <div className="min-h-[6rem] space-y-2">
                 {stageDeals.map((deal) => (
                   <WebsiteDealCard
                     key={deal.id}
@@ -147,6 +180,12 @@ export default function WebsiteDealsPage() {
                     onMove={moveStage}
                     onDelete={deleteDeal}
                     onUpdated={load}
+                    dragging={draggingId === deal.id}
+                    onDragStart={() => setDraggingId(deal.id)}
+                    onDragEnd={() => {
+                      setDraggingId(null);
+                      setDragOverStage(null);
+                    }}
                   />
                 ))}
               </div>
@@ -166,18 +205,39 @@ function WebsiteDealCard({
   onMove,
   onDelete,
   onUpdated,
+  dragging,
+  onDragStart,
+  onDragEnd,
 }: {
   deal: WebsiteDeal;
   contacts: Contact[];
   onMove: (deal: WebsiteDeal, stage: DealStage) => void;
   onDelete: (deal: WebsiteDeal) => void;
   onUpdated: () => void;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
 }) {
   const [showNotes, setShowNotes] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
 
+  // Not draggable while its notes or edit form are open, so selecting text
+  // or working in those fields can't start a drag by accident.
+  const canDrag = !showNotes && !showEdit;
+
   return (
-    <div className="card relative">
+    <div
+      className={`card relative ${canDrag ? 'cursor-grab active:cursor-grabbing' : ''} ${
+        dragging ? 'opacity-40' : ''
+      }`}
+      draggable={canDrag}
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', deal.id);
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
+    >
       {deal.urgent && (
         <span
           className="absolute right-2 top-2 text-2xl font-black leading-none text-red-500"
