@@ -9,8 +9,8 @@ export interface NavTab {
 }
 
 export const PIPELINE_TABS: NavTab[] = [
-  { href: '/website-deals', label: 'Websites' },
-  { href: '/websites', label: 'Website Builds' },
+  { href: '/website-deals', label: 'Sales' },
+  { href: '/websites', label: 'Websites' },
 ];
 
 export const TOOL_TABS: NavTab[] = [
@@ -27,7 +27,7 @@ function matches(pathname: string, href: string) {
 
 // Which group (and which sub-tab in it) a page belongs to. Tools are checked
 // first because their URLs live under /websites/, which would otherwise read
-// as a Website Builds page (/websites/<client id>).
+// as a Websites pipeline page (/websites/<client id>).
 export function findSubTab(pathname: string): { group: 'tools' | 'pipelines'; href: string } | null {
   const tool = TOOL_TABS.find((t) => matches(pathname, t.href));
   if (tool) return { group: 'tools', href: tool.href };

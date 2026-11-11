@@ -1,4 +1,4 @@
-// 'cold_lead' is only offered in the Websites Pipeline (see
+// 'cold_lead' is only offered in the Sales pipeline (see
 // WEBSITE_DEAL_STAGES below) -- it's part of this shared union because both
 // pipelines' `stage` columns are backed by the same Postgres enum, but the
 // Spotlights Pipeline's own stage list (DEAL_STAGES) omits it, so a
@@ -24,7 +24,7 @@ export const DEAL_STAGES: { value: DealStage; label: string }[] = [
   { value: 'lost', label: 'Lost' },
 ];
 
-// The Websites Pipeline's stage list -- same as DEAL_STAGES, plus Cold lead
+// The Sales pipeline's stage list -- same as DEAL_STAGES, plus Cold lead
 // as the entry stage before Warm lead.
 export const WEBSITE_DEAL_STAGES: { value: DealStage; label: string }[] = [
   { value: 'cold_lead', label: 'Cold lead' },
@@ -102,11 +102,12 @@ export interface Task {
   title: string;
   due_date: string | null;
   done: boolean;
+  done_at: string | null;
   created_at: string;
   contacts?: Pick<Contact, 'id' | 'company'> | null;
 }
 
-// The Websites Pipeline: same stages/structure as the Spotlights pipeline
+// The Sales pipeline: same stages/structure as the Spotlights pipeline
 // (Deal) and pulls from the same contacts, but lives in its own table with
 // its own data, has no link to the Cards system, and tracks two dollar
 // amounts instead of one -- a one-time initial value and a monthly

@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { WebsiteClient } from '@/lib/types';
 import { WEBSITE_CLIENT_STAGES, WEBSITE_CLIENT_STAGE_COLORS, daysSince } from '@/lib/types';
 
-// The Website Build Pipeline: a Kanban board over website_clients, the
+// The Websites pipeline (website builds): a Kanban board over website_clients, the
 // independent build-tracking table (see supabase/add_website_clients.sql).
 // Not linked to the sales-side Deal/WebsiteDeal pipelines at all.
 export default function WebsitesPipelinePage() {
@@ -38,7 +38,7 @@ export default function WebsitesPipelinePage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-2xl">Website Build Pipeline</h1>
+          <h1 className="font-serif text-2xl">Websites Pipeline</h1>
           <p className="text-sm text-fog">
             {clients.length} {clients.length === 1 ? 'client' : 'clients'} in the build process
           </p>

@@ -10,16 +10,30 @@ import { contactDisplayName } from '@/lib/types';
 //  - tasks: tasks tied to a contact, still added from that contact's page
 // Each item remembers which table it came from, so ticking it updates only
 // that row in that table.
+//
+// Completed items stay listed for 5 days after they were checked off, then
+// drop off the page. Nothing is deleted -- the rows stay in the database,
+// and unticking within the 5 days brings an item straight back.
 type Item = {
   key: string;
   source: 'todo' | 'task';
   id: string;
   title: string;
   done: boolean;
+  done_at: string | null;
   due_date: string | null;
   created_at: string;
   contact: { id: string; company: string | null } | null;
 };
+
+const HIDE_COMPLETED_AFTER_DAYS = 5;
+
+// Done long enough ago to drop off the page. Items with no recorded
+// completion time (none today) stay visible rather than vanish unexpectedly.
+function completedLongAgo(item: Item) {
+  if (!item.done || !item.done_at) return false;
+  return Date.now() - new Date(item.done_at).getTime() > HIDE_COMPLETED_AFTER_DAYS * 24 * 60 * 60 * 1000;
+}
 
 // Dated items first (soonest first), then undated ones oldest-first.
 function byDueThenCreated(a: Item, b: Item) {
@@ -39,7 +53,7 @@ export default function TodoPage() {
   async function load() {
     const [todos, tasks] = await Promise.all([
       supabase.from('website_todos').select('*'),
-      supabase.from('tasks').select('id, title, done, due_date, created_at, contacts(id, company)'),
+      supabase.from('tasks').select('id, title, done, done_at, due_date, created_at, contacts(id, company)'),
     ]);
     const err = todos.error ?? tasks.error;
     if (err) {
@@ -55,6 +69,7 @@ export default function TodoPage() {
           id: t.id,
           title: t.title,
           done: t.done,
+          done_at: t.done_at,
           due_date: null,
           created_at: t.created_at,
           contact: null,
@@ -67,6 +82,7 @@ export default function TodoPage() {
           id: t.id,
           title: t.title,
           done: t.done,
+          done_at: t.done_at,
           due_date: t.due_date,
           created_at: t.created_at,
           contact: t.contacts ?? null,
@@ -95,17 +111,13 @@ export default function TodoPage() {
 
   async function toggle(item: Item) {
     const done = !item.done;
+    const done_at = done ? new Date().toISOString() : null;
     // Tick it locally first so the checkbox responds instantly.
-    setItems((prev) => prev.map((i) => (i.key === item.key ? { ...i, done } : i)));
-    if (item.source === 'todo') {
-      await supabase
-        .from('website_todos')
-        .update({ done, done_at: done ? new Date().toISOString() : null })
-        .eq('id', item.id);
-    } else {
-      // Same update the old Tasks page made -- tasks has no done_at column.
-      await supabase.from('tasks').update({ done }).eq('id', item.id);
-    }
+    setItems((prev) => prev.map((i) => (i.key === item.key ? { ...i, done, done_at } : i)));
+    await supabase
+      .from(item.source === 'todo' ? 'website_todos' : 'tasks')
+      .update({ done, done_at })
+      .eq('id', item.id);
     load();
   }
 
@@ -118,7 +130,7 @@ export default function TodoPage() {
   }
 
   const open = items.filter((i) => !i.done).sort(byDueThenCreated);
-  const done = items.filter((i) => i.done).sort(byDueThenCreated);
+  const done = items.filter((i) => i.done && !completedLongAgo(i)).sort(byDueThenCreated);
 
   return (
     <div className="space-y-6">
@@ -152,7 +164,9 @@ export default function TodoPage() {
 
       {done.length > 0 && (
         <div>
-          <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-mist">Completed</h2>
+          <h2 className="mb-2 text-xs font-medium uppercase tracking-wide text-mist">
+            Completed <span className="normal-case tracking-normal">· clears {HIDE_COMPLETED_AFTER_DAYS} days after checking off</span>
+          </h2>
           <div className="card divide-y divide-white/[0.06] p-0">
             {done.map((item) => (
               <Row key={item.key} item={item} onToggle={() => toggle(item)} onRemove={() => remove(item)} />

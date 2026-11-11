@@ -66,6 +66,7 @@ create table tasks (
   title text not null,
   due_date date,
   done boolean not null default false,
+  done_at timestamptz,
   created_at timestamptz not null default now()
 );
 
@@ -415,6 +416,18 @@ alter table website_todos enable row level security;
 
 create policy "authenticated users can do everything on website_todos"
   on website_todos for all to authenticated using (true) with check (true);
+
+-- Dashboard daily "posted on social media" check: one row per checked
+-- local date, so each new day starts unchecked.
+create table social_posts (
+  posted_on date primary key,
+  created_at timestamptz not null default now()
+);
+
+alter table social_posts enable row level security;
+
+create policy "authenticated users can do everything on social_posts"
+  on social_posts for all to authenticated using (true) with check (true);
 
 -- Private bucket for intake photo uploads. No insert/update/delete policy
 -- at all -- uploads go through the service-role key server-side (see

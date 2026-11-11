@@ -1,28 +1,15 @@
 import Link from 'next/link';
+import SocialPostCard from '@/components/SocialPostCard';
 import { createClient } from '@/lib/supabase/server';
 import {
   contactDisplayName,
   daysSince,
   WEBSITE_CLIENT_STAGES,
-  WEBSITE_DEAL_STAGES,
-  type DealStage,
   type WebsiteClientStage,
 } from '@/lib/types';
 import { REVENUE_CLIENT_COLUMNS, revenueFromClients, type RevenueClient } from '@/lib/revenue';
 
 export const dynamic = 'force-dynamic';
-
-// Short axis labels for the Websites pipeline bar chart.
-const SHORT_STAGE: Record<DealStage, string> = {
-  cold_lead: 'Cold',
-  warm_lead: 'Warm',
-  called_contacted: 'Called',
-  requested_followup: 'Req. FU',
-  followed_up: "FU'd",
-  won: 'Won',
-  fulfilled_obligation: 'Fulfilled',
-  lost: 'Lost',
-};
 
 const INTAKE_STAGES: WebsiteClientStage[] = ['new', 'intake', 'info_received'];
 const BUILD_STAGES: WebsiteClientStage[] = ['building', 'client_review', 'revisions', 'domain_setup'];
@@ -39,21 +26,20 @@ type DashboardClient = RevenueClient & {
   stage_changed_at: string;
 };
 
-// Read-only overview: every number here is a plain select, nothing on this
-// page writes to the database.
+// Read-only overview: every number here is a plain select. The only thing
+// on the page that writes is the social media check (SocialPostCard), which
+// touches nothing but its own social_posts table.
 export default async function DashboardPage() {
   const supabase = createClient();
 
   const [
     { count: contactCount },
-    { data: websiteDeals },
     { data: clientRows },
     { data: settings },
     { data: openTasks },
     { data: openTodos },
   ] = await Promise.all([
     supabase.from('contacts').select('*', { count: 'exact', head: true }),
-    supabase.from('website_deals').select('stage'),
     supabase.from('website_clients').select(`id, business_name, stage, stage_changed_at, ${REVENUE_CLIENT_COLUMNS}`),
     supabase.from('website_pipeline_settings').select('stuck_threshold_days').eq('id', 1).maybeSingle(),
     supabase
@@ -83,7 +69,7 @@ export default async function DashboardPage() {
     ...(openTodos ?? []).map((t) => ({ key: `todo-${t.id}`, title: t.title as string, detail: 'To-do' })),
   ].slice(0, 6);
 
-  // --- Website builds (same "stuck" rule as the Website Builds board) ---
+  // --- Websites pipeline (same "stuck" rule as its board) ---
   const threshold = settings?.stuck_threshold_days ?? 5;
   const inGroup = (group: WebsiteClientStage[]) => clients.filter((c) => group.includes(c.stage)).length;
   const intakeCount = inGroup(INTAKE_STAGES);
@@ -99,20 +85,12 @@ export default async function DashboardPage() {
   const { staticTotal, recurringTotal } = revenueFromClients(clients);
   const activeMaintenance = clients.filter((c) => c.maintenance_status === 'active').length;
 
-  // --- Websites pipeline counts for the bar chart ---
-  const websiteCounts = WEBSITE_DEAL_STAGES.map((s) => ({
-    ...s,
-    count: (websiteDeals ?? []).filter((d) => d.stage === s.value).length,
-  }));
-  const maxWebsiteCount = Math.max(1, ...websiteCounts.map((s) => s.count));
-  const busiestStage = websiteCounts.reduce((a, b) => (b.count > a.count ? b : a), websiteCounts[0]);
-
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl">Dashboard</h1>
-          <p className="text-sm text-fog">A snapshot of website builds, the pipeline, revenue, and what&apos;s next.</p>
+          <p className="text-sm text-fog">A snapshot of website builds, revenue, and what&apos;s next.</p>
         </div>
         <Link href="/contacts" className="chip-glass gap-2 px-3 py-1.5 text-sm hover:bg-white/15">
           <IconUsers /> {(contactCount ?? 0).toLocaleString()} contacts
@@ -160,7 +138,7 @@ export default async function DashboardPage() {
             </div>
             <h2 className="mt-4 font-serif text-xl">Revenue</h2>
             <p className="mt-1 text-xs text-mist">
-              From Website Builds. Monthly fees count while maintenance is Active ({activeMaintenance}{' '}
+              From the Websites pipeline. Monthly fees count while maintenance is Active ({activeMaintenance}{' '}
               {activeMaintenance === 1 ? 'client' : 'clients'}).
             </p>
 
@@ -227,44 +205,8 @@ export default async function DashboardPage() {
 
         {/* Right third */}
         <div className="grid content-start gap-6 lg:col-span-4">
-          {/* Websites pipeline bar chart */}
-          <section className="card">
-            <PanelTitle title="Websites pipeline" href="/website-deals" />
-            <div className="mt-4 flex items-end gap-2">
-              <p className="text-4xl font-medium tracking-tight">{(websiteDeals ?? []).length}</p>
-              <p className="pb-1 text-xs text-fog">deals</p>
-            </div>
-
-            <div className="mt-6 flex h-48 items-end gap-1.5">
-              {websiteCounts.map((s) => {
-                const isMax = s.value === busiestStage.value && s.count > 0;
-                const height = Math.max(8, Math.round((s.count / maxWebsiteCount) * 100));
-                return (
-                  <div
-                    key={s.value}
-                    className="relative flex h-full flex-1 flex-col items-center justify-end"
-                    title={`${s.label}: ${s.count}`}
-                  >
-                    {isMax && <span className="chip-cyan absolute -top-1 whitespace-nowrap">{s.count}</span>}
-                    <div
-                      className={`w-full rounded-full ${
-                        isMax ? 'bg-paper/90' : 'border border-white/10 bg-white/[0.08]'
-                      }`}
-                      style={{ height: `${height}%`, maxHeight: 'calc(100% - 1.5rem)' }}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            <div className="mt-2 flex gap-1.5">
-              {websiteCounts.map((s) => (
-                <div key={s.value} className="flex-1 text-center">
-                  <p className="truncate text-[10px] text-mist">{SHORT_STAGE[s.value]}</p>
-                  <p className="text-[11px] text-fog">{s.count}</p>
-                </div>
-              ))}
-            </div>
-          </section>
+          {/* Daily social media check */}
+          <SocialPostCard />
 
           {/* Website builds by stage */}
           <section className="card">

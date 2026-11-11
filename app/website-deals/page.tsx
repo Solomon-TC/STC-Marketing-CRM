@@ -7,7 +7,7 @@ import { contactDisplayName, WEBSITE_DEAL_STAGES, STAGE_COLORS } from '@/lib/typ
 import ContactCombobox from '@/components/ContactCombobox';
 import ContactNotesLog from '@/components/ContactNotesLog';
 
-// The Websites Pipeline: same stages, contacts, and card-style layout as the
+// The Sales pipeline: same stages, contacts, and card-style layout as the
 // Spotlights Pipeline (app/deals/page.tsx), but backed by its own
 // website_deals table, tracking two dollar amounts instead of one, and with
 // no link to the Cards system.
@@ -92,7 +92,7 @@ export default function WebsiteDealsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-serif text-2xl">Websites Pipeline</h1>
+          <h1 className="font-serif text-2xl">Sales Pipeline</h1>
           <p className="text-sm text-fog">
             {deals.length} {deals.length === 1 ? 'deal' : 'deals'} across your pipeline
           </p>

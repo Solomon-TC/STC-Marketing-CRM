@@ -74,7 +74,10 @@ export default function ContactDetailPage() {
   }
 
   async function toggleTask(task: Task) {
-    await supabase.from('tasks').update({ done: !task.done }).eq('id', task.id);
+    await supabase
+      .from('tasks')
+      .update({ done: !task.done, done_at: task.done ? null : new Date().toISOString() })
+      .eq('id', task.id);
     load();
   }
 

@@ -1,7 +1,7 @@
 import type { WebsiteClient } from './types';
 
 // Single source of the revenue rules, so Finances and the Dashboard can't
-// disagree. Revenue comes only from Website Builds:
+// disagree. Revenue comes only from the Websites pipeline (website_clients):
 //  - Static: each client's build fee, counted once.
 //  - Recurring: each client's monthly fee, only while their maintenance is
 //    set to Active.

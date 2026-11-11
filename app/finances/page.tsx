@@ -13,7 +13,7 @@ function money(n: number) {
 const STATIC_COLOR = '#16A34A'; // green -- one-time revenue
 const RECURRING_COLOR = '#2563EB'; // blue -- monthly recurring revenue
 
-// Revenue from Website Builds' build and monthly fees (rules in
+// Revenue from the Websites pipeline's build and monthly fees (rules in
 // lib/revenue.ts), updating live via Supabase Realtime on website_clients.
 export default function FinancesPage() {
   const supabase = createClient();
@@ -46,7 +46,7 @@ export default function FinancesPage() {
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-2xl">Finances</h1>
-        <p className="text-sm text-fog">Revenue from Website Builds&apos; build and monthly fees, updating live.</p>
+        <p className="text-sm text-fog">Revenue from the Websites pipeline&apos;s build and monthly fees, updating live.</p>
       </div>
 
       <div className="card">
