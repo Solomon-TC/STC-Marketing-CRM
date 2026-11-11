@@ -149,8 +149,10 @@ export default function DealsPage() {
           return (
             <div
               key={stage.value}
-              className={`w-64 shrink-0 rounded-md transition ${
-                draggingId && dragOverStage === stage.value ? 'bg-white/5 ring-1 ring-pineLight/50' : ''
+              className={`w-72 shrink-0 rounded-3xl border border-white/10 p-2.5 backdrop-blur-xl transition ${
+                draggingId && dragOverStage === stage.value
+                  ? 'bg-white/[0.08] ring-1 ring-pineLight/60'
+                  : 'bg-white/[0.03]'
               }`}
               onDragOver={(e) => {
                 if (!draggingId) return;
@@ -167,7 +169,7 @@ export default function DealsPage() {
               }}
             >
               <div
-                className={`mb-2 flex items-center justify-between rounded-md border px-2 py-1.5 ${colors.header}`}
+                className={`mb-3 flex items-center justify-between rounded-full border px-3 py-1.5 ${colors.header}`}
               >
                 <h3 className={`text-sm font-medium ${colors.text}`}>{stage.label}</h3>
                 <span className={`text-xs ${colors.count}`}>{stageDeals.length}</span>
@@ -230,7 +232,7 @@ function DealCard({
 
   return (
     <div
-      className={`card relative ${canDrag ? 'cursor-grab active:cursor-grabbing' : ''} ${
+      className={`tile relative ${canDrag ? 'cursor-grab active:cursor-grabbing' : ''} ${
         dragging ? 'opacity-40' : ''
       }`}
       draggable={canDrag}

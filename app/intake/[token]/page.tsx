@@ -93,7 +93,7 @@ export default async function IntakePage({ params }: { params: { token: string }
       </div>
 
       {client.intake_submitted_at && (
-        <div className="card border-pineLight/30 bg-pine/20/40">
+        <div className="card border-pineLight/30 bg-pine/20">
           <p className="text-sm text-fog">
             Thanks -- we received this on {formatNoteTimestamp(client.intake_submitted_at)}. You can update anything
             below and submit again if something changes.

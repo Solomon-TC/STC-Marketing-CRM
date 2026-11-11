@@ -62,14 +62,17 @@ export default function WebsitesPipelinePage() {
           const stageClients = clients.filter((c) => c.stage === stage.value);
           const colors = WEBSITE_CLIENT_STAGE_COLORS[stage.value];
           return (
-            <div key={stage.value} className="w-64 shrink-0">
+            <div
+              key={stage.value}
+              className="w-72 shrink-0 rounded-3xl border border-white/10 bg-white/[0.03] p-2.5 backdrop-blur-xl"
+            >
               <div
-                className={`mb-2 flex items-center justify-between rounded-md border px-2 py-1.5 ${colors.header}`}
+                className={`mb-3 flex items-center justify-between rounded-full border px-3 py-1.5 ${colors.header}`}
               >
                 <h3 className={`text-sm font-medium ${colors.text}`}>{stage.label}</h3>
                 <span className={`text-xs ${colors.count}`}>{stageClients.length}</span>
               </div>
-              <div className="space-y-2">
+              <div className="min-h-[6rem] space-y-2">
                 {stageClients.map((client) => (
                   <ClientCard key={client.id} client={client} thresholdDays={thresholdDays} />
                 ))}
@@ -104,7 +107,7 @@ function ClientCard({ client, thresholdDays }: { client: WebsiteClient; threshol
   return (
     <Link
       href={`/websites/${client.id}`}
-      className={`card block hover:border-white/15 ${stuck ? 'border-warn/40' : ''}`}
+      className={`tile block ${stuck ? 'border-warn/50' : ''}`}
     >
       <p className="text-sm font-medium">{client.business_name}</p>
       <p className="mt-1 text-xs text-mist">

@@ -7,10 +7,10 @@ import type { Card, CardStatus } from '@/lib/types';
 import { BREAK_EVEN_COST, formatCardMonth } from '@/lib/types';
 
 const STATUS_BADGES: Record<CardStatus, string> = {
-  filling: 'bg-orange-500/10 text-orange-300',
-  ready: 'bg-green-500/10 text-green-300',
-  sent: 'bg-blue-500/10 text-blue-300',
-  archived: 'bg-white/5 text-mist',
+  filling: 'bg-amber-300 text-ink',
+  ready: 'bg-lime-300 text-ink',
+  sent: 'bg-cyan-300 text-ink',
+  archived: 'border border-white/10 bg-white/10 text-fog',
 };
 
 const STATUS_LABELS: Record<CardStatus, string> = {

@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Dark, matching stcmarketingco.com's own theme (ink background, paper
-   text) rather than the light theme this app used to have. */
+/* Dark base, matching stcmarketingco.com's own theme. The colored glows the
+   glass panels sit on are a fixed layer rendered by AppShell. */
 body {
   background-color: #0B0B0C;
   color: #F5F4F1;
@@ -17,18 +17,78 @@ input[type='radio'] {
   accent-color: #6B8A72;
 }
 
-.input {
-  @apply w-full rounded-lg border border-white/15 bg-ink px-3 py-2 text-sm text-paper placeholder:text-mist/60 outline-none focus:border-pineLight focus:ring-1 focus:ring-pineLight;
+/* An open <select> list is drawn by the OS; without this it inherits the
+   translucent field background and renders as white text on white. */
+option {
+  background-color: #16161a;
+  color: #f5f4f1;
 }
 
-.btn-primary {
-  @apply inline-flex items-center justify-center rounded-full bg-pineLight px-4 py-2 text-sm font-medium text-ink transition hover:bg-pine disabled:opacity-60;
+/* Slim translucent scrollbars (the kanban boards scroll sideways) instead
+   of the OS's bright white ones. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(255 255 255 / 0.18) transparent;
+}
+::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(255 255 255 / 0.18);
+  border-radius: 9999px;
 }
 
-.btn-secondary {
-  @apply inline-flex items-center justify-center rounded-full border border-white/15 bg-transparent px-4 py-2 text-sm font-medium text-paper transition hover:border-pineLight/60 hover:bg-white/5;
-}
+/* In the components layer (not after it) so a utility on the same element
+   -- p-0, w-auto, text-xs, a border color -- can still override these. */
+@layer components {
+  /* Frosted glass panel: translucent fill, background blur, a hairline
+     border, and a faint top highlight so the edge catches light. */
+  .card {
+    @apply rounded-3xl border border-white/10 bg-white/[0.035] p-5 backdrop-blur-xl;
+    box-shadow:
+      inset 0 1px 0 0 rgb(255 255 255 / 0.06),
+      0 12px 40px -16px rgb(0 0 0 / 0.7);
+  }
 
-.card {
-  @apply rounded-2xl border border-white/10 bg-charcoal p-4;
+  /* A smaller item that sits inside a glass panel (kanban cards, list rows).
+     Deliberately no backdrop blur: glass-on-glass looks muddy, and a busy
+     board can hold hundreds of these. */
+  .tile {
+    @apply rounded-2xl border border-white/[0.07] bg-white/[0.045] p-3 transition hover:border-white/15 hover:bg-white/[0.065];
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-sm text-paper placeholder:text-mist/60 outline-none transition focus:border-pineLight focus:ring-1 focus:ring-pineLight;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-full bg-pineLight px-4 py-2 text-sm font-medium text-ink transition hover:bg-pine hover:text-paper disabled:opacity-60;
+    box-shadow: 0 6px 20px -8px rgb(107 138 114 / 0.7);
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-paper backdrop-blur transition hover:border-pineLight/50 hover:bg-white/10;
+  }
+
+  /* Small status pills. The bright ones are for highlights only -- the
+     brand pine/tan stay the main accents. */
+  .chip {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+  }
+  .chip-lime {
+    @apply chip bg-lime-300 text-ink;
+  }
+  .chip-cyan {
+    @apply chip bg-cyan-300 text-ink;
+  }
+  .chip-amber {
+    @apply chip bg-amber-300 text-ink;
+  }
+  .chip-glass {
+    @apply chip border border-white/10 bg-white/10 text-paper;
+  }
 }
