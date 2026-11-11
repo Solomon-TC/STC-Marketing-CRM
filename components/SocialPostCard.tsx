@@ -2,24 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
+import { dayKey, shiftDay } from '@/lib/dates';
 
 // The Dashboard's daily "posted on social media" check. Each checked day is
 // one row in social_posts keyed by the local date, so a new day simply has
 // no row yet -- the box starts unchecked every morning without anything
 // having to reset it. Unchecking removes only today's row.
 
-// Local calendar date as YYYY-MM-DD (the browser's time zone, so the box
-// clears at local midnight rather than UTC midnight).
-function dayKey(d: Date) {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-function shiftDay(key: string, days: number) {
-  const [y, m, d] = key.split('-').map(Number);
-  return dayKey(new Date(y, m - 1, d + days));
-}
-
+// Dates are local (lib/dates.ts), so the box clears at local midnight.
 const HISTORY_DAYS = 60;
 
 export default function SocialPostCard() {

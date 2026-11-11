@@ -353,6 +353,7 @@ export interface WebsiteTodo {
   title: string;
   done: boolean;
   done_at: string | null;
+  due_date: string | null;
   created_at: string;
 }
 

@@ -409,6 +409,7 @@ create table website_todos (
   title text not null,
   done boolean not null default false,
   done_at timestamptz,
+  due_date date,
   created_at timestamptz not null default now()
 );
 
@@ -428,6 +429,20 @@ alter table social_posts enable row level security;
 
 create policy "authenticated users can do everything on social_posts"
   on social_posts for all to authenticated using (true) with check (true);
+
+-- Tick-offs for the recurring To-Do reminders (lib/reminders.ts works out
+-- their dates); one row per reminder per date checked.
+create table reminder_checks (
+  reminder text not null,
+  due_on date not null,
+  done_at timestamptz not null default now(),
+  primary key (reminder, due_on)
+);
+
+alter table reminder_checks enable row level security;
+
+create policy "authenticated users can do everything on reminder_checks"
+  on reminder_checks for all to authenticated using (true) with check (true);
 
 -- Private bucket for intake photo uploads. No insert/update/delete policy
 -- at all -- uploads go through the service-role key server-side (see
