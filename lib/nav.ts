@@ -19,6 +19,7 @@ export const TOOL_TABS: NavTab[] = [
   { href: '/websites/build-prompt', label: 'Build Prompt' },
   { href: '/websites/dns-reference', label: 'DNS Reference' },
   { href: '/websites/checklist-templates', label: 'Checklist Templates' },
+  { href: '/finances', label: 'Finances' },
 ];
 
 function matches(pathname: string, href: string) {
@@ -39,7 +40,6 @@ export function findSubTab(pathname: string): { group: 'tools' | 'pipelines'; hr
 export const MAIN_TABS: (NavTab & { isActive: (pathname: string) => boolean })[] = [
   { href: '/', label: 'Dashboard', isActive: (p) => p === '/' },
   { href: '/website-deals', label: 'Pipelines', isActive: (p) => findSubTab(p)?.group === 'pipelines' },
-  { href: '/finances', label: 'Finances', isActive: (p) => matches(p, '/finances') },
   { href: '/todo', label: 'To-Do', isActive: (p) => matches(p, '/todo') },
   { href: '/contacts', label: 'Tools', isActive: (p) => findSubTab(p)?.group === 'tools' },
 ];
