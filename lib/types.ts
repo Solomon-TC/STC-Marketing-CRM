@@ -271,6 +271,12 @@ export interface WebsiteClient {
   service_area: string | null;
   scope_tags: string[];
   live_domain: string | null;
+  // Where the domain is registered/hosted (e.g. GoDaddy).
+  domain_host: string | null;
+  // What Finances counts for website revenue: build_fee once (dated by
+  // date_closed, else created_at), monthly_fee while maintenance is active.
+  build_fee: number | null;
+  monthly_fee: number | null;
   maintenance_status: 'active' | 'inactive';
   notes: string | null;
   intake_token: string;

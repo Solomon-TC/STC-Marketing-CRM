@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import type { Contact, Deal, Task } from '@/lib/types';
-import { contactDisplayName, DEAL_STAGES } from '@/lib/types';
+import type { Contact, Task, WebsiteDeal } from '@/lib/types';
+import { contactDisplayName, WEBSITE_DEAL_STAGES } from '@/lib/types';
 import ContactNotesLog from '@/components/ContactNotesLog';
 
 export default function ContactDetailPage() {
@@ -14,17 +14,16 @@ export default function ContactDetailPage() {
   const supabase = createClient();
 
   const [contact, setContact] = useState<Contact | null>(null);
-  const [deals, setDeals] = useState<Deal[]>([]);
+  const [deals, setDeals] = useState<WebsiteDeal[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [saving, setSaving] = useState(false);
   const [newTask, setNewTask] = useState('');
   const [newTaskDue, setNewTaskDue] = useState('');
-  const [showPipelineChoice, setShowPipelineChoice] = useState(false);
 
   async function load() {
     const [{ data: c }, { data: d }, { data: t }] = await Promise.all([
       supabase.from('contacts').select('*').eq('id', id).single(),
-      supabase.from('deals').select('*').eq('contact_id', id).order('created_at', { ascending: false }),
+      supabase.from('website_deals').select('*').eq('contact_id', id).order('created_at', { ascending: false }),
       supabase.from('tasks').select('*').eq('contact_id', id).order('due_date', { ascending: true }),
     ]);
     setContact(c);
@@ -147,33 +146,11 @@ export default function ContactDetailPage() {
       </div>
 
       <div className="card">
-        <div className="relative mb-3 flex items-center justify-between">
+        <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-medium">Deals</h2>
-          <div>
-            <button
-              type="button"
-              onClick={() => setShowPipelineChoice((v) => !v)}
-              className="btn-secondary"
-            >
-              Add to pipeline
-            </button>
-            {showPipelineChoice && (
-              <div className="absolute right-0 z-10 mt-1 w-48 rounded-md border border-white/10 bg-charcoal py-1 shadow-md">
-                <Link
-                  href={`/deals?contactId=${contact.id}`}
-                  className="block px-3 py-1.5 text-sm text-fog hover:bg-white/5"
-                >
-                  Spotlights Pipeline
-                </Link>
-                <Link
-                  href={`/website-deals?contactId=${contact.id}`}
-                  className="block px-3 py-1.5 text-sm text-fog hover:bg-white/5"
-                >
-                  Websites Pipeline
-                </Link>
-              </div>
-            )}
-          </div>
+          <Link href={`/website-deals?contactId=${contact.id}`} className="btn-secondary">
+            Add to pipeline
+          </Link>
         </div>
         {deals.length === 0 && <p className="text-sm text-mist">No deals yet for this contact.</p>}
         <div className="space-y-2">
@@ -181,13 +158,14 @@ export default function ContactDetailPage() {
             <div key={d.id} className="flex items-center justify-between text-sm">
               <span>{d.title}</span>
               <span className="text-mist">
-                {DEAL_STAGES.find((s) => s.value === d.stage)?.label}
-                {d.value ? ` · $${Number(d.value).toLocaleString()}` : ''}
+                {WEBSITE_DEAL_STAGES.find((s) => s.value === d.stage)?.label}
+                {d.initial_value ? ` · ${Number(d.initial_value).toLocaleString()}` : ''}
+                {d.recurring_value ? ` · ${Number(d.recurring_value).toLocaleString()}/mo` : ''}
               </span>
             </div>
           ))}
         </div>
-        <Link href="/deals" className="mt-3 inline-block text-sm text-pineLight hover:underline">
+        <Link href="/website-deals" className="mt-3 inline-block text-sm text-pineLight hover:underline">
           Manage deals in pipeline view
         </Link>
       </div>

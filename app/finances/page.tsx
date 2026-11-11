@@ -2,41 +2,27 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { WON_OR_BETTER_STAGES } from '@/lib/types';
-import RevenueChart, { type RevenuePoint } from '@/components/RevenueChart';
+import RevenueChart from '@/components/RevenueChart';
+import { REVENUE_CLIENT_COLUMNS, revenueFromClients, type RevenueClient } from '@/lib/revenue';
+
+// Whole dollars stay whole; anything with cents shows both digits ($2,734.50).
+function money(n: number) {
+  return '$' + n.toLocaleString(undefined, { minimumFractionDigits: n % 1 ? 2 : 0, maximumFractionDigits: 2 });
+}
 
 const STATIC_COLOR = '#16A34A'; // green -- one-time revenue
 const RECURRING_COLOR = '#2563EB'; // blue -- monthly recurring revenue
 
-// Static Revenue = Spotlights Pipeline's Value + Websites Pipeline's Initial
-// Value, for deals at Won or further. Recurring Revenue = Websites
-// Pipeline's Recurring Value only, same stage filter. Both update live via
-// Supabase Realtime on the deals and website_deals tables.
+// Revenue from Website Builds' build and monthly fees (rules in
+// lib/revenue.ts), updating live via Supabase Realtime on website_clients.
 export default function FinancesPage() {
   const supabase = createClient();
-  const [staticPoints, setStaticPoints] = useState<RevenuePoint[]>([]);
-  const [recurringPoints, setRecurringPoints] = useState<RevenuePoint[]>([]);
+  const [clients, setClients] = useState<RevenueClient[]>([]);
   const [loading, setLoading] = useState(true);
 
   async function load() {
-    const [{ data: deals }, { data: websiteDeals }] = await Promise.all([
-      supabase.from('deals').select('value, won_at').in('stage', WON_OR_BETTER_STAGES),
-      supabase.from('website_deals').select('initial_value, recurring_value, won_at').in('stage', WON_OR_BETTER_STAGES),
-    ]);
-
-    const staticFromDeals = (deals ?? [])
-      .filter((d) => d.value != null && d.won_at)
-      .map((d) => ({ date: d.won_at as string, amount: Number(d.value) }));
-    const staticFromWebsites = (websiteDeals ?? [])
-      .filter((d) => d.initial_value != null && d.won_at)
-      .map((d) => ({ date: d.won_at as string, amount: Number(d.initial_value) }));
-    setStaticPoints([...staticFromDeals, ...staticFromWebsites]);
-
-    const recurring = (websiteDeals ?? [])
-      .filter((d) => d.recurring_value != null && d.won_at)
-      .map((d) => ({ date: d.won_at as string, amount: Number(d.recurring_value) }));
-    setRecurringPoints(recurring);
-
+    const { data } = await supabase.from('website_clients').select(REVENUE_CLIENT_COLUMNS);
+    setClients((data as RevenueClient[] | null) ?? []);
     setLoading(false);
   }
 
@@ -45,8 +31,7 @@ export default function FinancesPage() {
 
     const channel = supabase
       .channel('finances-live')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'deals' }, load)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'website_deals' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'website_clients' }, load)
       .subscribe();
 
     return () => {
@@ -55,36 +40,33 @@ export default function FinancesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const staticTotal = staticPoints.reduce((sum, p) => sum + p.amount, 0);
-  const recurringTotal = recurringPoints.reduce((sum, p) => sum + p.amount, 0);
+  const { staticPoints, recurringPoints, staticTotal, recurringTotal } = revenueFromClients(clients);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="font-serif text-2xl">Finances</h1>
-        <p className="text-sm text-fog">
-          Revenue from Won-or-better deals across both pipelines, updating live.
-        </p>
+        <p className="text-sm text-fog">Revenue from Website Builds&apos; build and monthly fees, updating live.</p>
       </div>
 
       <div className="card">
-        <div className="mb-1 flex items-baseline justify-between">
+        <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="text-sm font-medium">Static Revenue</h2>
-          <span className="text-xs text-mist">Spotlights Value + Websites Initial Value</span>
+          <span className="text-right text-xs text-mist">Build fees, dated by Date closed</span>
         </div>
         <p className="mb-4 text-3xl font-medium text-paper">
-          {loading ? '...' : `$${staticTotal.toLocaleString()}`}
+          {loading ? '...' : money(staticTotal)}
         </p>
         <RevenueChart points={staticPoints} color={STATIC_COLOR} />
       </div>
 
       <div className="card">
-        <div className="mb-1 flex items-baseline justify-between">
+        <div className="mb-1 flex items-baseline justify-between gap-3">
           <h2 className="text-sm font-medium">Recurring Revenue</h2>
-          <span className="text-xs text-mist">Websites Recurring Value, per month</span>
+          <span className="text-right text-xs text-mist">Monthly fees of clients with Active maintenance</span>
         </div>
         <p className="mb-4 text-3xl font-medium text-paper">
-          {loading ? '...' : `$${recurringTotal.toLocaleString()}/mo`}
+          {loading ? '...' : `${money(recurringTotal)}/mo`}
         </p>
         <RevenueChart points={recurringPoints} color={RECURRING_COLOR} />
       </div>

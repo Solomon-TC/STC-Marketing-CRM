@@ -113,6 +113,16 @@ function ClientCard({ client, thresholdDays }: { client: WebsiteClient; threshol
       <p className="mt-1 text-xs text-mist">
         {days} {days === 1 ? 'day' : 'days'} in this stage
       </p>
+      {(client.build_fee != null || client.monthly_fee != null) && (
+        <div className="mt-2 flex flex-wrap gap-1.5">
+          {client.build_fee != null && (
+            <span className="chip-glass">${Number(client.build_fee).toLocaleString()} build</span>
+          )}
+          {client.monthly_fee != null && (
+            <span className="chip-glass">${Number(client.monthly_fee).toLocaleString()}/mo</span>
+          )}
+        </div>
+      )}
       {stuck && <p className="mt-1 text-xs font-medium text-warn">⚠ Stuck</p>}
     </Link>
   );
@@ -126,6 +136,8 @@ function NewClientForm({ onCreated }: { onCreated: () => void }) {
     email: '',
     phone: '',
     date_closed: '',
+    build_fee: '',
+    monthly_fee: '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -143,6 +155,8 @@ function NewClientForm({ onCreated }: { onCreated: () => void }) {
         email: form.email || null,
         phone: form.phone || null,
         date_closed: form.date_closed || null,
+        build_fee: form.build_fee ? Number(form.build_fee) : null,
+        monthly_fee: form.monthly_fee ? Number(form.monthly_fee) : null,
       })
       .select()
       .single();
@@ -213,6 +227,30 @@ function NewClientForm({ onCreated }: { onCreated: () => void }) {
           value={form.date_closed}
           onChange={(e) => setForm({ ...form, date_closed: e.target.value })}
         />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="mb-1 block text-xs text-mist">Build fee ($)</label>
+          <input
+            className="input"
+            type="number"
+            min={0}
+            step="0.01"
+            value={form.build_fee}
+            onChange={(e) => setForm({ ...form, build_fee: e.target.value })}
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-mist">Monthly fee ($/mo)</label>
+          <input
+            className="input"
+            type="number"
+            min={0}
+            step="0.01"
+            value={form.monthly_fee}
+            onChange={(e) => setForm({ ...form, monthly_fee: e.target.value })}
+          />
+        </div>
       </div>
       {error && <p className="text-sm text-warn sm:col-span-2">{error}</p>}
       <div className="sm:col-span-2">

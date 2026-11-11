@@ -23,9 +23,13 @@ export default function WebsiteClientDetailPage() {
     service_area: string;
     scope_tags: string;
     live_domain: string;
+    domain_host: string;
+    build_fee: string;
+    monthly_fee: string;
     maintenance_status: string;
     notes: string;
   } | null>(null);
+  const [registrars, setRegistrars] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -33,7 +37,7 @@ export default function WebsiteClientDetailPage() {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
 
   async function load() {
-    const [{ data: c }, { data: items }, { data: photos }] = await Promise.all([
+    const [{ data: c }, { data: items }, { data: photos }, { data: guides }] = await Promise.all([
       supabase.from('website_clients').select('*').eq('id', id).single(),
       supabase
         .from('website_client_checklist_items')
@@ -45,8 +49,11 @@ export default function WebsiteClientDetailPage() {
         .select('storage_path')
         .eq('website_client_id', id)
         .order('created_at', { ascending: true }),
+      // Suggestions for "Domain hosted on" -- the registrars you keep DNS notes for.
+      supabase.from('dns_reference_guides').select('registrar').order('sort_order', { ascending: true }),
     ]);
     setClient(c);
+    setRegistrars((guides ?? []).map((g) => g.registrar));
     setChecklist(items ?? []);
 
     if (photos && photos.length > 0) {
@@ -70,6 +77,9 @@ export default function WebsiteClientDetailPage() {
         service_area: c.service_area ?? '',
         scope_tags: (c.scope_tags ?? []).join(', '),
         live_domain: c.live_domain ?? '',
+        domain_host: c.domain_host ?? '',
+        build_fee: c.build_fee != null ? String(c.build_fee) : '',
+        monthly_fee: c.monthly_fee != null ? String(c.monthly_fee) : '',
         maintenance_status: c.maintenance_status,
         notes: c.notes ?? '',
       });
@@ -102,6 +112,9 @@ export default function WebsiteClientDetailPage() {
           .map((t) => t.trim())
           .filter(Boolean),
         live_domain: form.live_domain || null,
+        domain_host: form.domain_host || null,
+        build_fee: form.build_fee ? Number(form.build_fee) : null,
+        monthly_fee: form.monthly_fee ? Number(form.monthly_fee) : null,
         maintenance_status: form.maintenance_status,
         notes: form.notes || null,
       })
@@ -263,6 +276,40 @@ export default function WebsiteClientDetailPage() {
             onChange={(e) => setForm({ ...form, live_domain: e.target.value })}
           />
         </Field>
+        <Field label="Domain hosted on">
+          <input
+            className="input"
+            list="domain-hosts"
+            placeholder="e.g. GoDaddy"
+            value={form.domain_host}
+            onChange={(e) => setForm({ ...form, domain_host: e.target.value })}
+          />
+          <datalist id="domain-hosts">
+            {registrars.map((r) => (
+              <option key={r} value={r} />
+            ))}
+          </datalist>
+        </Field>
+        <Field label="Build fee ($)">
+          <input
+            className="input"
+            type="number"
+            min={0}
+            step="0.01"
+            value={form.build_fee}
+            onChange={(e) => setForm({ ...form, build_fee: e.target.value })}
+          />
+        </Field>
+        <Field label="Monthly fee ($/mo)">
+          <input
+            className="input"
+            type="number"
+            min={0}
+            step="0.01"
+            value={form.monthly_fee}
+            onChange={(e) => setForm({ ...form, monthly_fee: e.target.value })}
+          />
+        </Field>
         <Field label="Maintenance">
           <select
             className="input"
@@ -272,6 +319,7 @@ export default function WebsiteClientDetailPage() {
             <option value="inactive">Inactive</option>
             <option value="active">Active</option>
           </select>
+          <p className="mt-1 text-[11px] text-mist">The monthly fee only counts in Finances while this is Active.</p>
         </Field>
         <Field label={`Scope tags (comma-separated -- e.g. ${SUGGESTED_WEBSITE_SCOPE_TAGS.join(', ')})`} full>
           <input

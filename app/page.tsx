@@ -1,14 +1,14 @@
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import {
-  BREAK_EVEN_COST,
   contactDisplayName,
-  DEAL_STAGES,
-  formatCardMonth,
+  daysSince,
+  WEBSITE_CLIENT_STAGES,
   WEBSITE_DEAL_STAGES,
-  WON_OR_BETTER_STAGES,
   type DealStage,
+  type WebsiteClientStage,
 } from '@/lib/types';
+import { REVENUE_CLIENT_COLUMNS, revenueFromClients, type RevenueClient } from '@/lib/revenue';
 
 export const dynamic = 'force-dynamic';
 
@@ -24,45 +24,53 @@ const SHORT_STAGE: Record<DealStage, string> = {
   lost: 'Lost',
 };
 
+const INTAKE_STAGES: WebsiteClientStage[] = ['new', 'intake', 'info_received'];
+const BUILD_STAGES: WebsiteClientStage[] = ['building', 'client_review', 'revisions', 'domain_setup'];
+const LIVE_STAGES: WebsiteClientStage[] = ['live', 'maintenance'];
+
 function money(n: number) {
   return `$${Math.round(n).toLocaleString()}`;
 }
 
-// Read-only overview of the Sales side: every number here is a plain select,
-// nothing on this page writes to the database.
+type DashboardClient = RevenueClient & {
+  id: string;
+  business_name: string;
+  stage: WebsiteClientStage;
+  stage_changed_at: string;
+};
+
+// Read-only overview: every number here is a plain select, nothing on this
+// page writes to the database.
 export default async function DashboardPage() {
   const supabase = createClient();
 
   const [
     { count: contactCount },
-    { data: deals },
     { data: websiteDeals },
+    { data: clientRows },
+    { data: settings },
     { data: openTasks },
-    { data: activeCards },
     { data: openTodos },
-  ] =
-    await Promise.all([
-      supabase.from('contacts').select('*', { count: 'exact', head: true }),
-      supabase.from('deals').select('stage, value, won_at'),
-      supabase.from('website_deals').select('stage, initial_value, recurring_value, won_at'),
-      supabase
-        .from('tasks')
-        .select('id, title, due_date, contacts(id, company)')
-        .eq('done', false)
-        .order('due_date', { ascending: true })
-        .limit(6),
-      supabase
-        .from('cards')
-        .select('id, city, month, status, card_slots(price, status)')
-        .in('status', ['filling', 'ready'])
-        .order('month', { ascending: true }),
-      supabase
-        .from('website_todos')
-        .select('id, title')
-        .eq('done', false)
-        .order('created_at', { ascending: true })
-        .limit(6),
-    ]);
+  ] = await Promise.all([
+    supabase.from('contacts').select('*', { count: 'exact', head: true }),
+    supabase.from('website_deals').select('stage'),
+    supabase.from('website_clients').select(`id, business_name, stage, stage_changed_at, ${REVENUE_CLIENT_COLUMNS}`),
+    supabase.from('website_pipeline_settings').select('stuck_threshold_days').eq('id', 1).maybeSingle(),
+    supabase
+      .from('tasks')
+      .select('id, title, due_date, contacts(id, company)')
+      .eq('done', false)
+      .order('due_date', { ascending: true })
+      .limit(6),
+    supabase
+      .from('website_todos')
+      .select('id, title')
+      .eq('done', false)
+      .order('created_at', { ascending: true })
+      .limit(6),
+  ]);
+
+  const clients = (clientRows as DashboardClient[] | null) ?? [];
 
   // Same combined list the To-Do tab shows: contact tasks (soonest due
   // first) then personal to-dos.
@@ -75,35 +83,21 @@ export default async function DashboardPage() {
     ...(openTodos ?? []).map((t) => ({ key: `todo-${t.id}`, title: t.title as string, detail: 'To-do' })),
   ].slice(0, 6);
 
-  // --- Spotlights pipeline (same figures the old Dashboard showed) ---
-  const stageCounts: Record<string, number> = {};
-  const stageValue: Record<string, number> = {};
-  (deals ?? []).forEach((d) => {
-    stageCounts[d.stage] = (stageCounts[d.stage] ?? 0) + 1;
-    stageValue[d.stage] = (stageValue[d.stage] ?? 0) + (Number(d.value) || 0);
-  });
-  const isOpen = (s: string) => !['won', 'fulfilled_obligation', 'lost'].includes(s);
-  const openDeals = (deals ?? []).filter((d) => isOpen(d.stage));
-  const totalOpenValue = openDeals.reduce((sum, d) => sum + (Number(d.value) || 0), 0);
-  const leadCount = stageCounts['warm_lead'] ?? 0;
-  const followUpCount =
-    (stageCounts['called_contacted'] ?? 0) + (stageCounts['requested_followup'] ?? 0) + (stageCounts['followed_up'] ?? 0);
-  const closedCount = (stageCounts['won'] ?? 0) + (stageCounts['fulfilled_obligation'] ?? 0);
-  const segmentTotal = leadCount + followUpCount + closedCount;
-  const pct = (n: number) => (segmentTotal ? Math.round((n / segmentTotal) * 100) : 0);
+  // --- Website builds (same "stuck" rule as the Website Builds board) ---
+  const threshold = settings?.stuck_threshold_days ?? 5;
+  const inGroup = (group: WebsiteClientStage[]) => clients.filter((c) => group.includes(c.stage)).length;
+  const intakeCount = inGroup(INTAKE_STAGES);
+  const buildCount = inGroup(BUILD_STAGES);
+  const liveCount = inGroup(LIVE_STAGES);
+  const pct = (n: number) => (clients.length ? Math.round((n / clients.length) * 100) : 0);
+  const stuck = clients
+    .filter((c) => c.stage !== 'maintenance' && daysSince(c.stage_changed_at) >= threshold)
+    .sort((a, b) => daysSince(b.stage_changed_at) - daysSince(a.stage_changed_at));
+  const stageLabel = (s: WebsiteClientStage) => WEBSITE_CLIENT_STAGES.find((x) => x.value === s)?.label ?? s;
 
-  // --- Revenue: same rules as the Finances page, so the totals match it ---
-  const wonOrBetter = (s: string) => WON_OR_BETTER_STAGES.includes(s as DealStage);
-  const staticRevenue =
-    (deals ?? [])
-      .filter((d) => wonOrBetter(d.stage) && d.value != null && d.won_at)
-      .reduce((sum, d) => sum + Number(d.value), 0) +
-    (websiteDeals ?? [])
-      .filter((d) => wonOrBetter(d.stage) && d.initial_value != null && d.won_at)
-      .reduce((sum, d) => sum + Number(d.initial_value), 0);
-  const recurringRevenue = (websiteDeals ?? [])
-    .filter((d) => wonOrBetter(d.stage) && d.recurring_value != null && d.won_at)
-    .reduce((sum, d) => sum + Number(d.recurring_value), 0);
+  // --- Revenue: lib/revenue.ts, shared with Finances so the totals match ---
+  const { staticTotal, recurringTotal } = revenueFromClients(clients);
+  const activeMaintenance = clients.filter((c) => c.maintenance_status === 'active').length;
 
   // --- Websites pipeline counts for the bar chart ---
   const websiteCounts = WEBSITE_DEAL_STAGES.map((s) => ({
@@ -118,7 +112,7 @@ export default async function DashboardPage() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl">Dashboard</h1>
-          <p className="text-sm text-fog">A snapshot of contacts, pipelines, revenue, and what&apos;s next.</p>
+          <p className="text-sm text-fog">A snapshot of website builds, the pipeline, revenue, and what&apos;s next.</p>
         </div>
         <Link href="/contacts" className="chip-glass gap-2 px-3 py-1.5 text-sm hover:bg-white/15">
           <IconUsers /> {(contactCount ?? 0).toLocaleString()} contacts
@@ -128,54 +122,57 @@ export default async function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-12">
         {/* Left two-thirds */}
         <div className="grid gap-6 md:grid-cols-2 lg:col-span-8">
-          {/* Spotlights pipeline */}
+          {/* Website builds */}
           <section className="card">
-            <PanelTitle title="Spotlights pipeline" href="/deals" />
+            <PanelTitle title="Website builds" href="/websites" />
             <div className="mt-4 flex items-end gap-3">
-              <p className="text-4xl font-medium tracking-tight">{money(totalOpenValue)}</p>
+              <p className="text-4xl font-medium tracking-tight">{clients.length}</p>
               <p className="pb-1 text-xs leading-tight text-fog">
-                Open pipeline
+                clients in
                 <br />
-                value
+                the build pipeline
               </p>
             </div>
 
             <div className="mt-5 flex gap-1.5">
-              <Segment pct={pct(leadCount)} className="bg-amber-300" />
-              <Segment pct={pct(followUpCount)} className="bg-cyan-300" />
-              <Segment pct={pct(closedCount)} className="bg-lime-300" />
+              <Segment pct={pct(intakeCount)} className="bg-amber-300" />
+              <Segment pct={pct(buildCount)} className="bg-cyan-300" />
+              <Segment pct={pct(liveCount)} className="bg-lime-300" />
             </div>
             <div className="mt-2 flex gap-4 text-[11px] text-mist">
-              <span>Leads {pct(leadCount)}%</span>
-              <span>Follow-up {pct(followUpCount)}%</span>
-              <span>Closed {pct(closedCount)}%</span>
+              <span>Intake {pct(intakeCount)}%</span>
+              <span>Building {pct(buildCount)}%</span>
+              <span>Live {pct(liveCount)}%</span>
             </div>
 
             <div className="mt-5 grid grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/[0.07] bg-white/[0.04] py-3">
-              <MiniStat icon={<IconBolt />} iconClass="bg-cyan-300" value={openDeals.length} label="Open" />
-              <MiniStat icon={<IconCheck />} iconClass="bg-lime-300" value={stageCounts['won'] ?? 0} label="Won" />
-              <MiniStat icon={<IconX />} iconClass="bg-amber-300" value={stageCounts['lost'] ?? 0} label="Lost" />
+              <MiniStat icon={<IconBolt />} iconClass="bg-cyan-300" value={intakeCount + buildCount} label="In progress" />
+              <MiniStat icon={<IconCheck />} iconClass="bg-lime-300" value={liveCount} label="Live" />
+              <MiniStat icon={<IconX />} iconClass="bg-amber-300" value={stuck.length} label="Stuck" />
             </div>
           </section>
 
           {/* Revenue */}
           <section className="card flex flex-col">
             <div className="flex flex-wrap gap-2">
-              <span className="chip-lime">Static</span>
-              <span className="chip-cyan">Recurring</span>
+              <span className="chip-lime">Build fees</span>
+              <span className="chip-cyan">Monthly fees</span>
             </div>
             <h2 className="mt-4 font-serif text-xl">Revenue</h2>
-            <p className="mt-1 text-xs text-mist">From Won and Fulfilled deals across both pipelines.</p>
+            <p className="mt-1 text-xs text-mist">
+              From Website Builds. Monthly fees count while maintenance is Active ({activeMaintenance}{' '}
+              {activeMaintenance === 1 ? 'client' : 'clients'}).
+            </p>
 
             <div className="mt-5 grid grid-cols-2 gap-3">
               <div className="rounded-2xl border border-white/[0.07] bg-white/[0.04] p-3">
                 <p className="text-xs text-fog">Static</p>
-                <p className="mt-1 text-2xl font-medium tracking-tight">{money(staticRevenue)}</p>
+                <p className="mt-1 text-2xl font-medium tracking-tight">{money(staticTotal)}</p>
               </div>
               <div className="rounded-2xl border border-white/[0.07] bg-white/[0.04] p-3">
                 <p className="text-xs text-fog">Recurring</p>
                 <p className="mt-1 text-2xl font-medium tracking-tight">
-                  {money(recurringRevenue)}
+                  {money(recurringTotal)}
                   <span className="text-sm text-mist">/mo</span>
                 </p>
               </div>
@@ -190,43 +187,30 @@ export default async function DashboardPage() {
             </Link>
           </section>
 
-          {/* Active cards */}
+          {/* Stuck builds */}
           <section className="card md:col-span-2">
-            <PanelTitle title="Active cards" href="/cards" />
-            {(!activeCards || activeCards.length === 0) && (
-              <p className="mt-4 text-sm text-mist">No cards are filling or ready right now.</p>
+            <PanelTitle title="Needs attention" href="/websites" />
+            {stuck.length === 0 && (
+              <p className="mt-4 text-sm text-mist">No build has sat in one stage for {threshold}+ days.</p>
             )}
             <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {(activeCards ?? []).map((card: any) => {
-                const slots: { price: number; status: string }[] = card.card_slots ?? [];
-                const filled = slots.filter((s) => s.status === 'filled');
-                const revenue = filled.reduce((sum, s) => sum + s.price, 0);
-                const fillPct = slots.length ? Math.round((filled.length / slots.length) * 100) : 0;
+              {stuck.slice(0, 6).map((client) => {
+                const days = daysSince(client.stage_changed_at);
                 return (
-                  <Link key={card.id} href={`/cards/${card.id}`} className="tile block p-4">
-                    <p className="text-xs text-mist">{formatCardMonth(card.month)}</p>
-                    <p className="mt-1 font-serif text-lg">{card.city}</p>
-                    <span className={`mt-3 ${card.status === 'ready' ? 'chip-lime' : 'chip-amber'}`}>
-                      {card.status === 'ready' ? 'Ready to Send' : 'Filling'}
-                    </span>
-                    <div className="mt-4 h-1.5 rounded-full bg-white/10">
-                      <div className="h-1.5 rounded-full bg-pineLight" style={{ width: `${fillPct}%` }} />
-                    </div>
-                    <div className="mt-2 flex justify-between text-xs text-fog">
-                      <span>
-                        {filled.length}/{slots.length} slots
-                      </span>
-                      <span>
-                        {money(revenue)} / {money(BREAK_EVEN_COST)}
-                      </span>
-                    </div>
+                  <Link key={client.id} href={`/websites/${client.id}`} className="tile block p-4">
+                    <p className="text-xs text-mist">
+                      {days} {days === 1 ? 'day' : 'days'} in stage
+                    </p>
+                    <p className="mt-1 font-serif text-lg">{client.business_name}</p>
+                    <span className="chip-amber mt-3">{stageLabel(client.stage)}</span>
                   </Link>
                 );
               })}
             </div>
+            {stuck.length > 6 && <p className="mt-3 text-xs text-mist">+{stuck.length - 6} more on the board</p>}
           </section>
 
-          {/* Upcoming tasks */}
+          {/* To-Do */}
           <section className="card md:col-span-2">
             <PanelTitle title="To-Do" href="/todo" />
             {upcoming.length === 0 && <p className="mt-4 text-sm text-mist">Nothing to do.</p>}
@@ -282,13 +266,12 @@ export default async function DashboardPage() {
             </div>
           </section>
 
-          {/* Spotlights deals by stage */}
+          {/* Website builds by stage */}
           <section className="card">
-            <h2 className="text-sm font-medium">Spotlights by stage</h2>
+            <h2 className="text-sm font-medium">Builds by stage</h2>
             <div className="mt-3 divide-y divide-white/[0.06]">
-              {DEAL_STAGES.map((stage) => {
-                const count = stageCounts[stage.value] ?? 0;
-                const value = stageValue[stage.value] ?? 0;
+              {WEBSITE_CLIENT_STAGES.map((stage) => {
+                const count = clients.filter((c) => c.stage === stage.value).length;
                 return (
                   <div key={stage.value} className="flex items-center justify-between py-2.5">
                     <div className="flex items-center gap-2.5">
@@ -299,14 +282,9 @@ export default async function DashboardPage() {
                       >
                         <IconCheck />
                       </span>
-                      <div>
-                        <p className="text-[11px] text-mist">
-                          {count} {count === 1 ? 'deal' : 'deals'}
-                        </p>
-                        <p className="text-sm font-medium">{stage.label}</p>
-                      </div>
+                      <p className="text-sm font-medium">{stage.label}</p>
                     </div>
-                    <p className="text-sm text-fog">{value > 0 ? money(value) : '—'}</p>
+                    <p className="text-sm text-fog">{count}</p>
                   </div>
                 );
               })}

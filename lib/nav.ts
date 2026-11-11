@@ -1,7 +1,7 @@
 // Shared navigation structure: the top-level tabs (Navbar) and the pill
 // sub-tabs shown above grouped pages (AppShell). Grouping is purely visual --
 // every page keeps its own URL, so existing links (a contact's "Add to
-// pipeline", a card link, a client's detail page) all still work.
+// pipeline", a client's detail page) all still work.
 
 export interface NavTab {
   href: string;
@@ -9,7 +9,6 @@ export interface NavTab {
 }
 
 export const PIPELINE_TABS: NavTab[] = [
-  { href: '/deals', label: 'Spotlights' },
   { href: '/website-deals', label: 'Websites' },
   { href: '/websites', label: 'Website Builds' },
 ];
@@ -39,8 +38,7 @@ export function findSubTab(pathname: string): { group: 'tools' | 'pipelines'; hr
 
 export const MAIN_TABS: (NavTab & { isActive: (pathname: string) => boolean })[] = [
   { href: '/', label: 'Dashboard', isActive: (p) => p === '/' },
-  { href: '/deals', label: 'Pipelines', isActive: (p) => findSubTab(p)?.group === 'pipelines' },
-  { href: '/cards', label: 'Cards', isActive: (p) => matches(p, '/cards') },
+  { href: '/website-deals', label: 'Pipelines', isActive: (p) => findSubTab(p)?.group === 'pipelines' },
   { href: '/finances', label: 'Finances', isActive: (p) => matches(p, '/finances') },
   { href: '/todo', label: 'To-Do', isActive: (p) => matches(p, '/todo') },
   { href: '/contacts', label: 'Tools', isActive: (p) => findSubTab(p)?.group === 'tools' },

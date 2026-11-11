@@ -261,6 +261,9 @@ create table website_clients (
   service_area text,
   scope_tags text[] not null default '{}',
   live_domain text,
+  domain_host text,
+  build_fee numeric(12,2),
+  monthly_fee numeric(12,2),
   maintenance_status text not null default 'inactive'
     check (maintenance_status in ('active', 'inactive')),
   notes text,
@@ -376,6 +379,9 @@ create policy "authenticated users can do everything on dns_reference_guides"
 
 create policy "authenticated users can do everything on website_pipeline_settings"
   on website_pipeline_settings for all to authenticated using (true) with check (true);
+
+-- Finances reads build/monthly fees from website_clients and updates live.
+alter publication supabase_realtime add table website_clients;
 
 -- The Initial Build Prompt page: a singleton row (id is always 1) holding
 -- the text pasted into a new Claude Code session to start a client's build.
