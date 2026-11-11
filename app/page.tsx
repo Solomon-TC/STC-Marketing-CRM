@@ -33,7 +33,14 @@ function money(n: number) {
 export default async function DashboardPage() {
   const supabase = createClient();
 
-  const [{ count: contactCount }, { data: deals }, { data: websiteDeals }, { data: openTasks }, { data: activeCards }] =
+  const [
+    { count: contactCount },
+    { data: deals },
+    { data: websiteDeals },
+    { data: openTasks },
+    { data: activeCards },
+    { data: openTodos },
+  ] =
     await Promise.all([
       supabase.from('contacts').select('*', { count: 'exact', head: true }),
       supabase.from('deals').select('stage, value, won_at'),
@@ -49,7 +56,24 @@ export default async function DashboardPage() {
         .select('id, city, month, status, card_slots(price, status)')
         .in('status', ['filling', 'ready'])
         .order('month', { ascending: true }),
+      supabase
+        .from('website_todos')
+        .select('id, title')
+        .eq('done', false)
+        .order('created_at', { ascending: true })
+        .limit(6),
     ]);
+
+  // Same combined list the To-Do tab shows: contact tasks (soonest due
+  // first) then personal to-dos.
+  const upcoming = [
+    ...(openTasks ?? []).map((t: any) => ({
+      key: `task-${t.id}`,
+      title: t.title as string,
+      detail: `${t.contacts ? `${contactDisplayName(t.contacts)} · ` : ''}${t.due_date ?? 'no due date'}`,
+    })),
+    ...(openTodos ?? []).map((t) => ({ key: `todo-${t.id}`, title: t.title as string, detail: 'To-do' })),
+  ].slice(0, 6);
 
   // --- Spotlights pipeline (same figures the old Dashboard showed) ---
   const stageCounts: Record<string, number> = {};
@@ -204,18 +228,13 @@ export default async function DashboardPage() {
 
           {/* Upcoming tasks */}
           <section className="card md:col-span-2">
-            <PanelTitle title="Upcoming tasks" href="/tasks" />
-            {(!openTasks || openTasks.length === 0) && (
-              <p className="mt-4 text-sm text-mist">Nothing due. Add tasks from a contact or deal.</p>
-            )}
+            <PanelTitle title="To-Do" href="/todo" />
+            {upcoming.length === 0 && <p className="mt-4 text-sm text-mist">Nothing to do.</p>}
             <div className="mt-3 divide-y divide-white/[0.06]">
-              {(openTasks ?? []).map((task: any) => (
-                <div key={task.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
-                  <span>{task.title}</span>
-                  <span className="shrink-0 text-mist">
-                    {task.contacts ? `${contactDisplayName(task.contacts)} · ` : ''}
-                    {task.due_date ?? 'no due date'}
-                  </span>
+              {upcoming.map((item) => (
+                <div key={item.key} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                  <span>{item.title}</span>
+                  <span className="shrink-0 text-mist">{item.detail}</span>
                 </div>
               ))}
             </div>

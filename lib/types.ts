@@ -339,8 +339,8 @@ export interface WebsiteBuildPrompt {
   updated_at: string;
 }
 
-// A plain to-do item on the Websites view's To-Do page -- separate from the
-// sales-side Task above, which is tied to a contact.
+// A personal to-do (the To-Do tab). Separate from Task above, which is tied
+// to a contact; the To-Do tab lists both together.
 export interface WebsiteTodo {
   id: string;
   title: string;

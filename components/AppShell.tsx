@@ -2,11 +2,14 @@
 
 import { usePathname } from 'next/navigation';
 import Navbar from './Navbar';
+import SubTabs from './SubTabs';
+import { findSubTab, PIPELINE_TABS, TOOL_TABS } from '@/lib/nav';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isIntake = pathname.startsWith('/intake');
   const hideNav = pathname === '/login' || isIntake;
+  const subTab = findSubTab(pathname);
 
   return (
     <>
@@ -22,7 +25,12 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       )}
       {!hideNav && <Navbar />}
-      <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-6 lg:px-10">{children}</main>
+      <main className="mx-auto max-w-[1800px] px-4 py-6 sm:px-6 lg:px-10">
+        {!hideNav && subTab && (
+          <SubTabs tabs={subTab.group === 'tools' ? TOOL_TABS : PIPELINE_TABS} activeHref={subTab.href} />
+        )}
+        {children}
+      </main>
     </>
   );
 }
