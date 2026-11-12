@@ -20,7 +20,7 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-[1800px] rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-[0_12px_40px_-16px_rgb(0_0_0/0.8)] backdrop-blur-xl">
+      <div className="animate-fade-down mx-auto max-w-[1800px] rounded-[2rem] border border-white/10 bg-white/[0.04] shadow-[0_12px_40px_-16px_rgb(0_0_0/0.8)] backdrop-blur-xl">
         <div className="flex items-center justify-between gap-3 px-3 py-2">
           <Link href="/" className="flex shrink-0 items-center gap-2.5">
             <span className="flex h-9 w-9 items-center justify-center rounded-full border border-white/15 bg-white/[0.06] font-serif text-lg text-pineLight">
@@ -77,7 +77,7 @@ export default function Navbar() {
         </div>
 
         {menuOpen && (
-          <nav className="flex flex-col gap-0.5 border-t border-white/10 p-3 md:hidden">
+          <nav className="animate-fade-down flex flex-col gap-0.5 border-t border-white/10 p-3 md:hidden">
             {MAIN_TABS.map((tab) => {
               const active = tab.isActive(pathname);
               return (

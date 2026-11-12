@@ -101,7 +101,7 @@ export default function SocialPostCard() {
       >
         <span
           className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
-            postedToday ? 'bg-lime-300 text-ink' : 'border-2 border-white/20 text-transparent'
+            postedToday ? 'animate-pop bg-lime-300 text-ink' : 'border-2 border-white/20 text-transparent'
           }`}
         >
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2.5">

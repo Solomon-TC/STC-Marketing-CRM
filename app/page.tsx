@@ -262,7 +262,7 @@ function PanelTitle({ title, href }: { title: string; href: string }) {
 
 function Segment({ pct, className }: { pct: number; className: string }) {
   if (pct === 0) return null;
-  return <div className={`h-1.5 rounded-full ${className}`} style={{ width: `${pct}%` }} />;
+  return <div className={`animate-grow-x h-1.5 rounded-full ${className}`} style={{ width: `${pct}%` }} />;
 }
 
 function MiniStat({

@@ -24,6 +24,92 @@ option {
   color: #f5f4f1;
 }
 
+/* ---- Motion ----
+   Subtle, and only ever on an element's way in (or on press/hover).
+   Entrance animations use fill-mode "backwards", so once they finish they
+   leave nothing behind -- no lingering transform or opacity that could
+   change layout, stacking, or the glass blur. Deliberately no page-wide
+   fade: an animating wrapper's opacity would cut the panels' backdrop
+   blur off from the glow behind them until it finished. */
+:root {
+  --ease-out: cubic-bezier(0.22, 0.8, 0.24, 1);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+}
+@keyframes rise-sm {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@keyframes fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes grow-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@keyframes pop {
+  0% {
+    transform: scale(0.6);
+  }
+  60% {
+    transform: scale(1.12);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Page titles (and the line under them) slide in with the panels. */
+main h1,
+main h1 + p {
+  animation: rise-sm 0.45s var(--ease-out) backwards;
+}
+main h1 + p {
+  animation-delay: 0.04s;
+}
+
+input[type='checkbox'] {
+  transition: transform 0.15s var(--ease-out);
+}
+input[type='checkbox']:active {
+  transform: scale(0.85);
+}
+
+@layer utilities {
+  .animate-fade-down {
+    animation: fade-down 0.3s var(--ease-out) backwards;
+  }
+  .animate-grow-x {
+    transform-origin: left;
+    animation: grow-x 0.8s var(--ease-out) 0.2s backwards;
+  }
+  .animate-pop {
+    animation: pop 0.35s var(--ease-out);
+  }
+}
+
+/* Anyone who has asked their OS for less motion gets none of it. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* Slim translucent scrollbars (the kanban boards scroll sideways) instead
    of the OS's bright white ones. */
 * {
@@ -52,13 +138,21 @@ option {
     box-shadow:
       inset 0 1px 0 0 rgb(255 255 255 / 0.06),
       0 12px 40px -16px rgb(0 0 0 / 0.7);
+    animation: rise 0.55s var(--ease-out) backwards;
   }
+  /* A gentle stagger so a page's panels arrive one after another. */
+  .card:nth-child(2) { animation-delay: 0.05s; }
+  .card:nth-child(3) { animation-delay: 0.1s; }
+  .card:nth-child(4) { animation-delay: 0.15s; }
+  .card:nth-child(5) { animation-delay: 0.2s; }
+  .card:nth-child(n + 6) { animation-delay: 0.25s; }
 
   /* A smaller item that sits inside a glass panel (kanban cards, list rows).
      Deliberately no backdrop blur: glass-on-glass looks muddy, and a busy
      board can hold hundreds of these. */
   .tile {
-    @apply rounded-2xl border border-white/[0.07] bg-white/[0.045] p-3 transition hover:border-white/15 hover:bg-white/[0.065];
+    @apply rounded-2xl border border-white/[0.07] bg-white/[0.045] p-3 transition duration-200 hover:-translate-y-0.5 hover:border-white/15 hover:bg-white/[0.065];
+    animation: rise-sm 0.4s var(--ease-out) backwards;
   }
 
   .input {
@@ -66,12 +160,12 @@ option {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center rounded-full bg-pineLight px-4 py-2 text-sm font-medium text-ink transition hover:bg-pine hover:text-paper disabled:opacity-60;
+    @apply inline-flex items-center justify-center rounded-full bg-pineLight px-4 py-2 text-sm font-medium text-ink transition hover:bg-pine hover:text-paper active:scale-[0.97] disabled:opacity-60;
     box-shadow: 0 6px 20px -8px rgb(107 138 114 / 0.7);
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-paper backdrop-blur transition hover:border-pineLight/50 hover:bg-white/10;
+    @apply inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-paper backdrop-blur transition hover:border-pineLight/50 hover:bg-white/10 active:scale-[0.97];
   }
 
   /* Small status pills. The bright ones are for highlights only -- the
