@@ -88,7 +88,7 @@ export default async function DashboardPage() {
   const activeMaintenance = clients.filter((c) => c.maintenance_status === 'active').length;
 
   return (
-    <div className="space-y-6">
+    <div className="dashboard space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="font-serif text-3xl">Dashboard</h1>

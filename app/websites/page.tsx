@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import type { WebsiteClient } from '@/lib/types';
+import type { WebsiteClient, WebsiteClientStage } from '@/lib/types';
 import { WEBSITE_CLIENT_STAGES, WEBSITE_CLIENT_STAGE_COLORS, daysSince } from '@/lib/types';
 
 // The Websites pipeline (website builds): a Kanban board over website_clients, the
@@ -14,6 +14,9 @@ export default function WebsitesPipelinePage() {
   const [clients, setClients] = useState<WebsiteClient[]>([]);
   const [thresholdDays, setThresholdDays] = useState(5);
   const [showForm, setShowForm] = useState(false);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragOverStage, setDragOverStage] = useState<WebsiteClientStage | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function load() {
     const [{ data: c }, { data: s }] = await Promise.all([
@@ -28,6 +31,24 @@ export default function WebsitesPipelinePage() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Drag a client card onto another column to change its stage -- the same
+  // single-field change as picking a new Stage on the client's page and
+  // saving. stage_changed_at is reset by the database trigger, exactly as it
+  // is for that save; nothing else on the client is touched.
+  async function dropOnStage(stage: WebsiteClientStage) {
+    const client = clients.find((c) => c.id === draggingId);
+    setDraggingId(null);
+    setDragOverStage(null);
+    if (!client || client.stage === stage) return;
+    // Move it locally first so the board responds instantly.
+    setClients((prev) =>
+      prev.map((c) => (c.id === client.id ? { ...c, stage, stage_changed_at: new Date().toISOString() } : c))
+    );
+    const { error } = await supabase.from('website_clients').update({ stage }).eq('id', client.id);
+    setError(error ? error.message : null);
+    load();
+  }
 
   async function updateThreshold(days: number) {
     setThresholdDays(days);
@@ -57,6 +78,8 @@ export default function WebsitesPipelinePage() {
         />
       )}
 
+      {error && <p className="text-sm text-warn">{error}</p>}
+
       <div className="flex gap-4 overflow-x-auto pb-4">
         {WEBSITE_CLIENT_STAGES.map((stage) => {
           const stageClients = clients.filter((c) => c.stage === stage.value);
@@ -64,7 +87,24 @@ export default function WebsitesPipelinePage() {
           return (
             <div
               key={stage.value}
-              className="w-72 shrink-0 rounded-3xl border border-white/10 bg-white/[0.03] p-2.5 backdrop-blur-xl"
+              className={`w-72 shrink-0 rounded-3xl border border-white/10 p-2.5 backdrop-blur-xl transition ${
+                draggingId && dragOverStage === stage.value
+                  ? 'bg-white/[0.08] ring-1 ring-pineLight/60'
+                  : 'bg-white/[0.03]'
+              }`}
+              onDragOver={(e) => {
+                if (!draggingId) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                if (dragOverStage !== stage.value) setDragOverStage(stage.value);
+              }}
+              onDragLeave={(e) => {
+                if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDragOverStage(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                dropOnStage(stage.value);
+              }}
             >
               <div
                 className={`mb-3 flex items-center justify-between rounded-full border px-3 py-1.5 ${colors.header}`}
@@ -74,7 +114,17 @@ export default function WebsitesPipelinePage() {
               </div>
               <div className="min-h-[6rem] space-y-2">
                 {stageClients.map((client) => (
-                  <ClientCard key={client.id} client={client} thresholdDays={thresholdDays} />
+                  <ClientCard
+                    key={client.id}
+                    client={client}
+                    thresholdDays={thresholdDays}
+                    dragging={draggingId === client.id}
+                    onDragStart={() => setDraggingId(client.id)}
+                    onDragEnd={() => {
+                      setDraggingId(null);
+                      setDragOverStage(null);
+                    }}
+                  />
                 ))}
               </div>
             </div>
@@ -98,16 +148,38 @@ export default function WebsitesPipelinePage() {
   );
 }
 
-function ClientCard({ client, thresholdDays }: { client: WebsiteClient; thresholdDays: number }) {
+function ClientCard({
+  client,
+  thresholdDays,
+  dragging,
+  onDragStart,
+  onDragEnd,
+}: {
+  client: WebsiteClient;
+  thresholdDays: number;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}) {
   const days = daysSince(client.stage_changed_at);
   // Maintenance is meant to hold a client indefinitely -- that's the whole
   // point of the stage, not a sign anything's stuck.
   const stuck = client.stage !== 'maintenance' && days >= thresholdDays;
 
   return (
+    // Still a link: a click opens the client; a drag moves it between stages.
     <Link
       href={`/websites/${client.id}`}
-      className={`tile block ${stuck ? 'border-warn/50' : ''}`}
+      className={`tile block cursor-grab active:cursor-grabbing ${stuck ? 'border-warn/50' : ''} ${
+        dragging ? 'opacity-40' : ''
+      }`}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', client.id);
+        onDragStart();
+      }}
+      onDragEnd={onDragEnd}
     >
       <p className="text-sm font-medium">{client.business_name}</p>
       <p className="mt-1 text-xs text-mist">
