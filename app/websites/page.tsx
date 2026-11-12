@@ -87,7 +87,7 @@ export default function WebsitesPipelinePage() {
           return (
             <div
               key={stage.value}
-              className={`w-72 shrink-0 rounded-3xl border border-white/10 p-2.5 backdrop-blur-xl transition ${
+              className={`min-w-[16rem] flex-1 rounded-3xl border border-white/10 p-2.5 backdrop-blur-xl transition ${
                 draggingId && dragOverStage === stage.value
                   ? 'bg-white/[0.08] ring-1 ring-pineLight/60'
                   : 'bg-white/[0.03]'
