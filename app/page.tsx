@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import SocialPostCard from '@/components/SocialPostCard';
+import DashboardCalendar from '@/components/DashboardCalendar';
 import { createClient } from '@/lib/supabase/server';
 import {
   contactDisplayName,
@@ -27,8 +28,9 @@ type DashboardClient = RevenueClient & {
 };
 
 // Read-only overview: every number here is a plain select. The only thing
-// on the page that writes is the social media check (SocialPostCard), which
-// touches nothing but its own social_posts table.
+// on the page that writes are the social media check (SocialPostCard, its own
+// social_posts table) and ticking items off in the calendar
+// (DashboardCalendar, the same tick-off the To-Do page does).
 export default async function DashboardPage() {
   const supabase = createClient();
 
@@ -234,6 +236,9 @@ export default async function DashboardPage() {
           </section>
         </div>
       </div>
+
+      {/* To-Do calendar (same as the To-Do page's) */}
+      <DashboardCalendar />
     </div>
   );
 }
