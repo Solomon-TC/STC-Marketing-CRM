@@ -6,6 +6,8 @@ import {
   contactDisplayName,
   daysSince,
   WEBSITE_CLIENT_STAGES,
+  WEBSITE_CLIENT_STAGE_LABELS,
+  boardStage,
   type WebsiteClientStage,
 } from '@/lib/types';
 import { REVENUE_CLIENT_COLUMNS, revenueFromClients, type RevenueClient } from '@/lib/revenue';
@@ -81,7 +83,7 @@ export default async function DashboardPage() {
   const stuck = clients
     .filter((c) => c.stage !== 'maintenance' && daysSince(c.stage_changed_at) >= threshold)
     .sort((a, b) => daysSince(b.stage_changed_at) - daysSince(a.stage_changed_at));
-  const stageLabel = (s: WebsiteClientStage) => WEBSITE_CLIENT_STAGES.find((x) => x.value === s)?.label ?? s;
+  const stageLabel = (s: WebsiteClientStage) => WEBSITE_CLIENT_STAGE_LABELS[boardStage(s)] ?? s;
 
   // --- Revenue: lib/revenue.ts, shared with Finances so the totals match ---
   const { staticTotal, recurringTotal } = revenueFromClients(clients);
@@ -215,7 +217,7 @@ export default async function DashboardPage() {
             <h2 className="text-sm font-medium">Builds by stage</h2>
             <div className="mt-3 divide-y divide-white/[0.06]">
               {WEBSITE_CLIENT_STAGES.map((stage) => {
-                const count = clients.filter((c) => c.stage === stage.value).length;
+                const count = clients.filter((c) => boardStage(c.stage) === stage.value).length;
                 return (
                   <div key={stage.value} className="flex items-center justify-between py-2.5">
                     <div className="flex items-center gap-2.5">

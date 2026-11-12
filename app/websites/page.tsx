@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { WebsiteClient, WebsiteClientStage } from '@/lib/types';
-import { WEBSITE_CLIENT_STAGES, WEBSITE_CLIENT_STAGE_COLORS, daysSince } from '@/lib/types';
+import { WEBSITE_CLIENT_STAGES, WEBSITE_CLIENT_STAGE_COLORS, boardStage, daysSince } from '@/lib/types';
 
 // The Websites pipeline (website builds): a Kanban board over website_clients, the
 // independent build-tracking table (see supabase/add_website_clients.sql).
@@ -82,7 +82,7 @@ export default function WebsitesPipelinePage() {
 
       <div className="flex gap-4 overflow-x-auto pb-4">
         {WEBSITE_CLIENT_STAGES.map((stage) => {
-          const stageClients = clients.filter((c) => c.stage === stage.value);
+          const stageClients = clients.filter((c) => boardStage(c.stage) === stage.value);
           const colors = WEBSITE_CLIENT_STAGE_COLORS[stage.value];
           return (
             <div
@@ -185,6 +185,10 @@ function ClientCard({
       <p className="mt-1 text-xs text-mist">
         {days} {days === 1 ? 'day' : 'days'} in this stage
       </p>
+      {/* The intake form was sent back (this used to be the Info Received column). */}
+      {boardStage(client.stage) === 'intake' && client.intake_submitted_at && (
+        <span className="chip-lime mt-2">Info received</span>
+      )}
       {(client.build_fee != null || client.monthly_fee != null) && (
         <div className="mt-2 flex flex-wrap gap-1.5">
           {client.build_fee != null && (
@@ -227,6 +231,8 @@ function NewClientForm({ onCreated }: { onCreated: () => void }) {
         email: form.email || null,
         phone: form.phone || null,
         date_closed: form.date_closed || null,
+        // Set explicitly: the column's database default is the retired 'new'.
+        stage: 'intake',
         build_fee: form.build_fee ? Number(form.build_fee) : null,
         monthly_fee: form.monthly_fee ? Number(form.monthly_fee) : null,
       })

@@ -59,12 +59,9 @@ export default async function IntakePage({ params }: { params: { token: string }
       intake_other_notes: field('other_notes'),
       intake_submitted_at: new Date().toISOString(),
     };
-    // Only auto-advance out of Intake -- if the client is already further
-    // along (e.g. correcting something after Building started), a
-    // resubmission shouldn't drag their card backward on the board.
-    if (current.stage === 'intake') {
-      patch.stage = 'info_received';
-    }
+    // The stage isn't changed here: a submitted intake now just shows an
+    // "Info received" tag on the client's card in the Intake column (the
+    // separate Info Received column was retired).
 
     await admin.from('website_clients').update(patch).eq('id', current.id);
 

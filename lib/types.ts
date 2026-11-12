@@ -223,17 +223,46 @@ export type WebsiteClientStage =
   | 'live'
   | 'maintenance';
 
+// The Websites pipeline's columns. The other values above still exist in
+// the database enum (Postgres can't drop enum values) but are no longer
+// offered -- see boardStage() for where a client still on one of them shows.
 export const WEBSITE_CLIENT_STAGES: { value: WebsiteClientStage; label: string }[] = [
-  { value: 'new', label: 'New' },
   { value: 'intake', label: 'Intake' },
-  { value: 'info_received', label: 'Info Received' },
   { value: 'building', label: 'Building' },
-  { value: 'client_review', label: 'Client Review' },
-  { value: 'revisions', label: 'Revisions' },
   { value: 'domain_setup', label: 'Domain Setup' },
-  { value: 'live', label: 'Live' },
   { value: 'maintenance', label: 'Maintenance' },
 ];
+
+// Labels for every stage value, including the retired ones.
+export const WEBSITE_CLIENT_STAGE_LABELS: Record<WebsiteClientStage, string> = {
+  new: 'New',
+  intake: 'Intake',
+  info_received: 'Info Received',
+  building: 'Building',
+  client_review: 'Client Review',
+  revisions: 'Revisions',
+  domain_setup: 'Domain Setup',
+  live: 'Live',
+  maintenance: 'Maintenance',
+};
+
+// Which column a client shows in. A client still on a retired stage (none
+// were when the columns changed) is shown in the closest column rather than
+// vanishing -- display only, its stored stage is left as it is.
+export function boardStage(stage: WebsiteClientStage): WebsiteClientStage {
+  switch (stage) {
+    case 'new':
+    case 'info_received':
+      return 'intake';
+    case 'client_review':
+    case 'revisions':
+      return 'building';
+    case 'live':
+      return 'maintenance';
+    default:
+      return stage;
+  }
+}
 
 // Kanban column styling, same shape/spirit as STAGE_COLORS above. Neutral
 // for the not-yet-started stage, warmer tones through the build, green once

@@ -4,7 +4,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import type { WebsiteClient, WebsiteClientChecklistItem } from '@/lib/types';
-import { WEBSITE_CLIENT_STAGES, SUGGESTED_WEBSITE_SCOPE_TAGS, formatNoteTimestamp } from '@/lib/types';
+import {
+  WEBSITE_CLIENT_STAGES,
+  WEBSITE_CLIENT_STAGE_LABELS,
+  SUGGESTED_WEBSITE_SCOPE_TAGS,
+  formatNoteTimestamp,
+  type WebsiteClientStage,
+} from '@/lib/types';
 
 export default function WebsiteClientDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -251,6 +257,13 @@ export default function WebsiteClientDetailPage() {
                 {s.label}
               </option>
             ))}
+            {/* A client still on a retired stage keeps it as an option, so
+                saving other fields never changes the stage by accident. */}
+            {client && !WEBSITE_CLIENT_STAGES.some((s) => s.value === client.stage) && (
+              <option value={client.stage}>
+                {WEBSITE_CLIENT_STAGE_LABELS[client.stage as WebsiteClientStage] ?? client.stage} (retired stage)
+              </option>
+            )}
           </select>
         </Field>
         <Field label="Date closed">
